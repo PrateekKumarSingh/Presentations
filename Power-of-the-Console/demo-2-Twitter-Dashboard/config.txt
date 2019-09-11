@@ -1,0 +1,4 @@
+consumer_key=GvNMecv4PvlHMS8GLDgh6aPuO
+consumer_secret=Wa62zCB5zuQnFYGYd7rvL19UwdkOB5lnSlR0G0Y6EoTb1HHP3G
+token=3148634719-RKKlrpn1RlaEz9z8FMOiEXxFcdw9Vxr1z8i3TU4
+token_secret=MRPr7HwXxdqpHGCRdCDA0bMsIZMAGe41Pb22ON5PZv6f9

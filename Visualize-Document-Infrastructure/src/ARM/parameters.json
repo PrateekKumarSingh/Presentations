@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "value": "prateek"
+        },
+        "adminPassword": {
+            "value": null
+        },
+        "dnsNameforLBIP": {
+            "value": "load-balancer-ip"
+        },
+        "vmNamePrefix": {
+            "value": "vm"
+        },
+        "lbName": {
+            "value": "load-balancer"
+        },
+        "nicNamePrefix": {
+            "value": "nic"
+        },
+        "publicIPAddressName": {
+            "value": "Public-ip"
+        },
+        "vnetName": {
+            "value": "vnet"
+        },
+        "imagePublisher": {
+            "value": "MicrosoftWindowsServer"
+        },
+        "imageOffer": {
+            "value": "WindowsServer"
+        },
+        "imageSKU": {
+            "value": "2012-R2-Datacenter"
+        },
+        "vmSize": {
+            "value": "Standard_A1"
+        }
+    }
+}
