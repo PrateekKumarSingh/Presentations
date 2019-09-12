@@ -1,8 +1,10 @@
 param(
-    [Switch] $IncludeSource,
-    [String[]] $Keywords = @('aws','linux','devops','pwsh','azure'),
-    [int] $Count = 10,
-    [String] $CustomLayout
+    [Parameter(Position=0)] [String[]] $Keywords = @('aws','linux','devops','pwsh','azure'),
+    [Parameter(Position=1)][int] $Count = 10,
+    [Parameter(Position=2)][String] $CustomLayout,
+    [Parameter(Position=3)]$MaxStepsOnYAxis = 3,
+    [Parameter(Position=4)]$MaxStepsOnXAxis = 20,
+    [Switch] $IncludeSource
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -26,8 +28,8 @@ $Keywords | ForEach-Object {
 }
 
 $Processes += Start-Process pwsh.exe
-$Processes += Start-Process pwsh.exe '-File Invoke-PerfMon.ps1 -Processor -PhysicalMemory -MaxStepsOnYAxis 3 -MaxStepsOnXAxis 30'
-$Processes += Start-Process pwsh.exe '-File Invoke-PerfMon.ps1 -EthernetSend -DiskWrite -MaxStepsOnYAxis 3 -MaxStepsOnXAxis 30'
+$Processes += Start-Process pwsh.exe "-File Invoke-PerfMon.ps1 -Processor -PhysicalMemory -MaxStepsOnYAxis $MaxStepsOnYAxis -MaxStepsOnXAxis $MaxStepsOnXAxis"
+$Processes += Start-Process pwsh.exe "-File Invoke-PerfMon.ps1 -EthernetSend -DiskWrite -MaxStepsOnYAxis $MaxStepsOnYAxis -MaxStepsOnXAxis $MaxStepsOnXAxis"
 
 Start-Sleep -Seconds 2
 
