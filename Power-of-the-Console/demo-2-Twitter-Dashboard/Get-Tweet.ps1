@@ -112,22 +112,24 @@ while ($true) {
         }, `
         @{n = 'Emotion'; e = { 
                 $Score = (Get-Face -URL $_.user_profile_image_url.replace('normal', '200x200')).faceattributes.emotion
-                $Emotion = @{
-                    Anger     = $Score.anger
-                    Contempt  = $Score.contempt
-                    Disgust   = $Score.disgust
-                    Fear      = $Score.fear
-                    Happiness = $Score.happiness
-                    Neutral   = $Score.neutral
-                    Sadness   = $Score.sadness
-                    Surprise  = $Score.surprise   
-                }
-
-                #Most Significant Emotion = Highest Decimal Value in all Emotion objects
-                $StrongestEmotion = $Emotion.GetEnumerator() | Sort-Object value -Descending | Select-Object -First 1
-
+                $Score = $Score | Select-Object -First 1 # to remove more than one faces detected in picture
+                
                 if ($score) {
-                    "{0}: {1:P}" -f $StrongestEmotion.name, $StrongestEmotion.Value
+                    $Emotion = @{
+                        Anger     = $Score.anger
+                        Contempt  = $Score.contempt
+                        Disgust   = $Score.disgust
+                        Fear      = $Score.fear
+                        Happiness = $Score.happiness
+                        Neutral   = $Score.neutral
+                        Sadness   = $Score.sadness
+                        Surprise  = $Score.surprise   
+                    }
+    
+                    #Most Significant Emotion = Highest Decimal Value in all Emotion objects
+                    # $StrongestEmotion = $Emotion.GetEnumerator() | Sort-Object value -Descending | Select-Object -First 1
+                    ($Emotion.GetEnumerator() | Foreach-Object {$_.name+":"+$_.value}) -join ';'
+                    # "{0}: {1:P}" -f $StrongestEmotion.name, $StrongestEmotion.Value
                     # $Score.foreach({"{0:P}" -f [double]$_}) -join  ', '
                 }
                 else {
@@ -138,17 +140,17 @@ while ($true) {
         } 
     
         Write-Host "    [+] Max ID: $Max_Id" -ForegroundColor Green
-        Write-Host "    [+] Filtered tweets in last $Mins minutes: $($Results.count)" -ForegroundColor Green
+        Write-Host "    [+] Filtered tweets in last $Mins mins: $($Results.count)" -ForegroundColor Green
         
         if($Results){
             $Results | Format-List date, screen_name, text, Sentiments, Emotion, ContentModeration
             Write-Host "    [+] Tweets export to: $(Split-Path $filepath -Leaf)" -ForegroundColor Green
-            $Results | Export-Csv $filepath -NoTypeInformation -Encoding UTF8 -Append -QuoteFields id,screen_name,date,retweet_count,favorite_count,"text",url,user_name,user_screen_name,user_description,user_profile_image_url,user_followers_count,user_friends_count,user_favourites_count,user_statuses_count,retweeted_status,sensitive
+            $Results | Export-Csv $filepath -NoTypeInformation -Encoding UTF8 -Append -QuoteFields id,screen_name,date,retweet_count,favorite_count,"text",url,user_name,user_screen_name,user_description,user_profile_image_url,user_followers_count,user_friends_count,user_favourites_count,user_statuses_count,retweeted_status,sensitive,sentiments,emotion,ContentModeration
         }
 
         $Content = Import-Csv $filepath -ErrorAction SilentlyContinue
         $Host.UI.RawUI.WindowTitle = "Search: $Search | Count: $(if($content){$Content.count}else{0})" 
-        Write-Host " [+] Sleeping for $Mins minutes.. `n" -ForegroundColor DarkMagenta
+        Write-Host " [+] Sleeping for $Mins minutes.. `n" -ForegroundColor Yellow
     }
     Start-Sleep -Seconds (60 * $Mins)
     # }

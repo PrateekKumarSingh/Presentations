@@ -24,8 +24,8 @@ $Keywords | ForEach-Object {
 }
 
 $Processes += Start-Process pwsh.exe
-$Processes += Start-Process pwsh.exe '-File Invoke-PerfMon.ps1 -Processor -PhysicalMemory -VirtualMemory -MaxStepsOnYAxis 3'
-$Processes += Start-Process pwsh.exe '-File Invoke-PerfMon.ps1 -EthernetSend -EthernetReceive -DiskWrite -MaxStepsOnYAxis 3'
+$Processes += Start-Process pwsh.exe '-File Invoke-PerfMon.ps1 -Processor -PhysicalMemory -MaxStepsOnYAxis 3 -MaxStepsOnXAxis 30'
+$Processes += Start-Process pwsh.exe '-File Invoke-PerfMon.ps1 -EthernetSend -DiskWrite -MaxStepsOnYAxis 3 -MaxStepsOnXAxis 30'
 
 Start-Sleep -Seconds 2
 

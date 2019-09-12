@@ -6,7 +6,8 @@ param(
     [switch] $EthernetReceive,
     [switch] $DiskRead,
     [switch] $DiskWrite,
-    $MaxStepsOnYAxis = 4
+    $MaxStepsOnYAxis = 4,
+    $MaxStepsOnXAxis = 40
 )
 
 Import-Module Graphical
@@ -20,17 +21,18 @@ Function Invoke-PerfMon {
         [switch] $EthernetReceive,
         [switch] $DiskRead,
         [switch] $DiskWrite,
-        $MaxStepsOnYAxis = 4
+        $MaxStepsOnYAxis = 4,
+        $MaxStepsOnXAxis = 4
     )
         
     $ErrorActionPreference = 'Stop'
-    [int[]]$CPU = @(0) * 40
-    [int[]]$RAM = @(0) * 40
-    [int[]]$PageFile = @(0) * 40
-    [int[]]$RecvPerSec = @(0) * 40
-    [int[]]$SentPerSec = @(0) * 40
-    [int[]]$DiskReadsPerSec = @(0) * 40
-    [int[]]$DiskWritesPerSec = @(0) * 40
+    [int[]]$CPU = @(0) * 20
+    [int[]]$RAM = @(0) * 20
+    [int[]]$PageFile = @(0) * 20
+    [int[]]$RecvPerSec = @(0) * 20
+    [int[]]$SentPerSec = @(0) * 20
+    [int[]]$DiskReadsPerSec = @(0) * 20
+    [int[]]$DiskWritesPerSec = @(0) * 20
     $RecvPrev = 0
     $SentBytesPrev = 0
     $DiskReadBytesPrev = 0
@@ -57,7 +59,7 @@ Function Invoke-PerfMon {
 
             if ($EthernetReceive) {
                 # Ethernet Receive   
-                [int[]]$recv = @(0) * 40
+                [int[]]$recv = @(0) * 20
                 $Diff = $Stats.ReceivedBytes - $RecvPrev
                 if ($diff -ge 0) {
                     
@@ -89,7 +91,7 @@ Function Invoke-PerfMon {
     
             if ($EthernetSend) {
                 # Ethernet Sent   
-                [int[]]$sent = @(0) * 40
+                [int[]]$sent = @(0) * 20
                 $Diff = $Stats.SentBytes - $SentBytesPrev
                 if ($diff -ge 0) {
                     
@@ -123,7 +125,7 @@ Function Invoke-PerfMon {
     
             if ($DiskRead) {
                 # Disk Reads
-                [int[]]$Writes = @(0) * 40
+                [int[]]$Writes = @(0) * 20
                 $Diff = $Disk.DiskReadBytesPersec - $DiskReadBytesPrev
                 if ($diff -ge 0) {
                     if ($DiskReadBytesPrev) {
@@ -155,7 +157,7 @@ Function Invoke-PerfMon {
             if ($DiskWrite) {
 
                 # Disk Writes
-                [int[]]$Writes = @(0) * 40
+                [int[]]$Writes = @(0) * 20
                 $Diff = $Disk.DiskWriteBytesPersec - $DiskWriteBytesPrev
                 if ($diff -ge 0) {
         
@@ -235,9 +237,10 @@ Function Invoke-PerfMon {
 
 Invoke-PerfMon -Processor:$Processor `
     -PhysicalMemory:$PhysicalMemory `
-    -VirtualMemory:$PhysicalMemory `
+    -VirtualMemory:$VirtualMemory `
     -EthernetSend:$EthernetSend `
     -EthernetReceive:$EthernetReceive `
     -DiskRead:$DiskRead `
     -DiskWrite:$DiskWrite `
     -MaxStepsOnYAxis:$MaxStepsOnYAxis
+    -MaxStepsOnXAxis:$MaxStepsOnXAxis
