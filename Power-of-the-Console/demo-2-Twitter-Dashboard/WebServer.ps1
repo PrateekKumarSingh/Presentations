@@ -104,7 +104,7 @@ input {
                             }   
                             td -Content {
                                 `$Emotions = `$item.Emotion
-                                if(`$Emotions -notlike "*No face*"){
+                                if(`$Emotions -notlike "*No face*" -and ![String]::IsNullorWhitespace(`$Emotions)){
                                     Foreach(`$emotion in `$Emotions.Split(';') ) {
                                         `$name, `$percentage =  (`$Emotion -split ':').trim()
                                         `$percentage= "{0:P}" -f [double]`$percentage
@@ -258,7 +258,6 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                 }
                 $dsb1 += New-PSHTMLChartBarDataSet -Data $Data -label 'Data [kb]' -borderColor (get-pshtmlColor -color 'Green') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'olive')
                 
-
                 New-PSHTMLChart -type radar -DataSet $dsb1 -title "Radar Chart Example" -Labels $Labels -CanvasID $radarCanvasID 
                 $i = $i + 1
 
