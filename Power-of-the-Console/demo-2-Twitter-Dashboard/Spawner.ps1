@@ -1,6 +1,6 @@
 param(
     [Switch] $IncludeSource,
-    [String[]] $Keywords = @("#PowerShell", "#Azure", "Python"),
+    [String[]] $Keywords = @('aws','linux','devops','pwsh','azure'),
     [int] $Count = 10,
     [String] $CustomLayout
 )
@@ -9,7 +9,9 @@ $ErrorActionPreference = 'SilentlyContinue'
 $PSDefaultParameterValues['Start-Process:Passthru']= $true
 Import-Module Gridify
 
+Write-Host "[+] Searching Keywords: $Keywords" -ForegroundColor Green   
 Write-Host "[+] Configuring pwsh.exe with fresh API Keys" -ForegroundColor Green   
+
 & 'C:\Program Files\PowerShell\7-preview\pwsh.exe' -Command { 
     Import-Module pscognitiveservice
     if(Get-Sentiment 'good'){exit}

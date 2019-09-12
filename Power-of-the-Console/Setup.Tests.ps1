@@ -1,5 +1,5 @@
 if($ENV:COMPUTERNAME -eq 'WIN-P5TILMPQ856'){
-    $Path = 'C:\Users\Administrator\Desktop\repo\psconfasia2019\Power-of-the-Console'
+    $Path = 'C:\Users\Administrator\Desktop\repo\Presentations\Power-of-the-Console'
 }
 else{
     $Path = 'D:\Workspace\Repository\Presentations\Power-of-the-Console' 

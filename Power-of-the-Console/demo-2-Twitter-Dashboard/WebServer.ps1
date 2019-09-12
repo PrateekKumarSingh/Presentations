@@ -208,7 +208,9 @@ input {
 #region create-home-page
 
 New-PolarisGetRoute -Path "/" -Scriptblock {
-    $radarCanvasID = "radarcanvas"
+    $radarCanvas0 = "radarcanvas0"
+    
+    #region html
     $HTMLDocument = html { 
         head {
             title 'Home - Stats'
@@ -218,6 +220,7 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
             link -rel "stylesheet" -type "text/css" -href "css/bootstrap.css"
         }
         body {
+            #region add-heading-an-braed-crumbs
             '<center>'
             h1 -class "display-4" -content { "Statistics" }
             '</center>'
@@ -233,9 +236,25 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                     }
                 }
             }
-      
+            #endregion add-heading-an-braed-crumbs
+
+            #region add-heading-an-braed-crumbs      
             div {
-                canvas -Height 500px -Width 500px -Id $radarCanvasID {
+                $canvas = @()
+                $canvas += canvas -Height 300px -Width 300px -Id $radarCanvas0 { }
+                $Topics = Get-ChildItem .\data\
+                $Topics.BaseName | ForEach-Object {
+                    $canvas += canvas -Height 300px -Width 300px -Id $_ { }
+                }
+
+                table {
+                    tr {
+                        $canvas | ForEach-Object {
+                            td {
+                                $_
+                            }
+                        }
+                    }
                 }
             }
             script -src "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js" -type "text/javascript"
@@ -243,31 +262,71 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
             script -type "text/javascript" -src "js/jquery.dataTables.js" -Attributes @{charset = "utf8" }
             script -type "text/javascript" -src "js/jquery.dataTables.min.js" -Attributes @{charset = "utf8" }
             script -content {
-                $i = 0
-                $Colors = 'Green', 'Purple', 'Red', 'Navy', 'Maroon', 'Blue'
                 $Topics = Get-ChildItem .\data\
                 $Labels = $Topics.BaseName
-                $dsb1 = @() 
+                $dataset_radarchart = @() 
+
+                # get tweets captured data
                 $data = Foreach ($topic in $Topics) {
                     (Import-Csv $topic.FullName).count
                 }
-                $dsb1 += New-PSHTMLChartBarDataSet -Data $Data -label 'Tweets Captured' -borderColor (get-pshtmlColor -color 'blue') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'Red')
+                $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $Data -label 'Tweets Captured' -borderColor (get-pshtmlColor -color 'blue') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'Red')
                 
+                # get content length data
                 $data = Foreach ($topic in $Topics) {
-                    [int]((Get-Item  $topic.FullName).length/1kb)
+                    [int]((Get-Item  $topic.FullName).length / 1kb)
                 }
-                $dsb1 += New-PSHTMLChartBarDataSet -Data $Data -label 'Data [kb]' -borderColor (get-pshtmlColor -color 'Green') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'olive')
+                $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $Data -label 'Data [kb]' -borderColor (get-pshtmlColor -color 'Green') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'olive')
+                New-PSHTMLChart -type radar -DataSet $dataset_radarchart -title "Radar Chart Example" -Labels $Labels -CanvasID $radarCanvas0 
                 
-                New-PSHTMLChart -type radar -DataSet $dsb1 -title "Radar Chart Example" -Labels $Labels -CanvasID $radarCanvasID 
-                $i = $i + 1
-
+                Foreach ($topic in $Topics) {
+                    $data = @()
+                    $hash = @{
+                        Surprise  = 0
+                        Sadness   = 0
+                        Happiness = 0
+                        Neutral   = 0
+                        Fear      = 0
+                        Anger     = 0
+                        Disgust   = 0
+                        Contempt  = 0
+                    }
+                    $counter = 0
+                    Foreach ($Emotions in (Import-Csv $topic.FullName).Emotion.where( { $_ -notlike "*no face*" })) {                    
+                        if ($Emotions -notlike "*No face*" -and ![String]::IsNullorWhitespace($Emotions)) {
+                            Foreach ($emotion in $Emotions.Split(';') ) {
+                                $name, $value = ($Emotion -split ':').trim()
+                                $hash[$name] += $(([int]$value) * 100)
+                                # $Name, 
+                            }
+                        }
+                        $counter = $counter + 1
+                    }
+                    $Labels = 'Fear', 'Anger', 'Sadness', 'Contempt', 'Disgust', 'Neutral', 'Happiness', 'Surprise'
+                    $Colors = @('Grey', 'red', 'DarkCyan', 'green', 'DarkGreen', 'yellow', 'Orange', 'grey'       )
+                    $HoverColors = @('black', 'darkred', 'Orange', 'grey', 'DarkGrey', 'blue', 'Magenta', 'DarkMagenta')
+                    
+                    $data = $hash.GetEnumerator().ForEach( {
+                            if ($_.value) {
+                                [int]($_.value / $counter)
+                            }
+                            else {
+                                $_.value
+                            }
+                        })
+                    # "$data"
+                    $dsb1 = New-PSHTMLChartPolarAreaDataSet -Data $data -BackgroundColor $Colors -hoverBackgroundColor $HoverColors
+                    if ($dsb1) {
+                        New-PSHTMLChart -type polarArea -DataSet $dsb1 -title "Emotions [$($topic.BaseName)]" -Labels $Labels  -CanvasID $($topic.BaseName)
+                    }
+                }
             }
-
-
         }
     }
     # $OutPath = "$Home/RadarChart1.html"
     # Out-PSHTMLDocument -HTMLDocument $HTMLDocument -OutPath $OutPath -Show
+    
+    #endregion html
 
     $Response.SetContentType('text/html')
     $Response.Send($HTMLDocument)
