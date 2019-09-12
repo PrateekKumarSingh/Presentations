@@ -5,6 +5,7 @@ Import-Module -Name Polaris, PSHTML, pscognitiveservice
 Add-Type -AssemblyName System.Web
 $Url = "http://localhost:8080"
 
+# load source files - javascript and style sheets
 New-PolarisStaticRoute -RoutePath "css/" -FolderPath "./src/css"
 New-PolarisStaticRoute -RoutePath "js/" -FolderPath "./src/js"
 
@@ -208,19 +209,25 @@ input {
 #region create-home-page
 
 New-PolarisGetRoute -Path "/" -Scriptblock {
-    $radarCanvas0 = "radarcanvas0"
     
     #region html
+    $radarCanvas0 = "radarcanvas0"
+    $radarCanvas1 = "radarcanvas1"
+    $radarCanvas2 = "radarcanvas2"
+
     $HTMLDocument = html { 
         head {
             title 'Home - Stats'
+            meta -httpequiv 'refresh' -content {60}
             link -rel "stylesheet" -type "text/css" -href "css/jquery.dataTables.css"
             link -rel "stylesheet" -type "text/css" -href "css/dataTables.material.min.css"
             link -rel "stylesheet" -type "text/css" -href "css/material.min.css"
             link -rel "stylesheet" -type "text/css" -href "css/bootstrap.css"
+            script -type "text/javascript" -src "https://canvasjs.com/assets/script/canvasjs.min.js"
+            # <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
         }
         body {
-            #region add-heading-an-braed-crumbs
+            #region add-heading-and-bread-crumbs
             '<center>'
             h1 -class "display-4" -content { "Statistics" }
             '</center>'
@@ -236,26 +243,39 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                     }
                 }
             }
-            #endregion add-heading-an-braed-crumbs
+            #endregion add-heading-and-bread-crumbs
 
-            #region add-heading-an-braed-crumbs      
+            #region add-canvas-and-charts  
             div {
+                # canvas placeholders
                 $canvas = @()
-                $canvas += canvas -Height 300px -Width 300px -Id $radarCanvas0 { }
+                $canvas += canvas -Style "width: 30%; height: 300px ;display: inline-block;" -Id $radarCanvas0 { }
+                $canvas += canvas -Style "width: 30%; height: 300px ;display: inline-block;" -Id $radarCanvas1 { }
+                $canvas += canvas -Style "width: 30%; height: 300px ;display: inline-block;" -Id $radarCanvas2 { }
+
+            
                 $Topics = Get-ChildItem .\data\
                 $Topics.BaseName | ForEach-Object {
-                    $canvas += canvas -Height 300px -Width 300px -Id $_ { }
+                    $canvas += canvas -Id $_ { } -Style "width: 30%; height: 300px ;display: inline-block;"
                 }
 
-                table {
-                    tr {
-                        $canvas | ForEach-Object {
-                            td {
-                                $_
-                            }
-                        }
-                    }
-                }
+                $canvas
+
+                # $Topics = Get-ChildItem .\data\
+                # For($i=0;$i -lt $Topics.count; $i++) {
+                #     canvas -Id $topics[$i].BaseName -Style "width: 45%; height: 300px" #;display: inline-block;"
+                #     if(!(($i+1)%2)){
+                #         br # adds a break tag after every two graphs
+                #     }
+                # }
+
+                # <div id="chartContainer1" style="width: 45%; height: 300px;display: inline-block;"></div> 
+                # <div id="chartContainer2" style="width: 45%; height: 300px;display: inline-block;"></div><br/>
+                # <div id="chartContainer3" style="width: 45%; height: 300px;display: inline-block;"></div>
+                # <div id="chartContainer4" style="width: 45%; height: 300px;display: inline-block;"></div>
+
+                # adds canvas in a tabular format
+                # table { tr {  $canvas | ForEach-Object { td { $_ } } } }
             }
             script -src "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js" -type "text/javascript"
             script -type "text/javascript" -src "js/jquery-3.3.1.js" -Attributes @{charset = "utf8" }
@@ -271,7 +291,11 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                     (Import-Csv $topic.FullName).count
                 }
                 $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $Data -label 'Tweets Captured' -borderColor (get-pshtmlColor -color 'blue') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'Red')
-                
+
+                # pie chart
+                $Data_PieChart = $data
+                $data|Out-File .\data\numberoftweets.txt -Append
+
                 # get content length data
                 $data = Foreach ($topic in $Topics) {
                     [int]((Get-Item  $topic.FullName).length / 1kb)
@@ -279,6 +303,22 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                 $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $Data -label 'Data [kb]' -borderColor (get-pshtmlColor -color 'Green') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'olive')
                 New-PSHTMLChart -type radar -DataSet $dataset_radarchart -title "Radar Chart Example" -Labels $Labels -CanvasID $radarCanvas0 
                 
+                # pie chart - tweet distribution
+                $colors = @("Lightgreen","red","Blue","Yellow","Yellow","DarkRed")
+                $DataSet_PieChart = New-PSHTMLChartPieDataSet -Data $Data_PieChart -label "March" -BackgroundColor $Colors
+                New-PSHTMLChart -type Pie -DataSet $Dataset_PieChart -title "Tweet distribution" -Labels $Labels -CanvasID $radarCanvas1
+    
+                # line chart - number of tweets per 10 seconds
+                $n = 0
+                $Data_LineChart = gc .\data\numberoftweets.txt | ForEach-Object {
+                    $data[$n] - $_
+                    $n=$n+1
+                }
+                $DataSet_LineChart = New-PSHTMLChartLineDataSet -Data $Data_LineChart -label "March" -FillbackgroundColor ([color]::new(0,0,0)) -LineColor 'LightGreen'
+                New-PSHTMLChart -type line -DataSet $Dataset_LineChart -title "Tweet Captured / Minute" -Labels $Labels -CanvasID $radarCanvas2
+    
+
+                # get emotion data for each topic
                 Foreach ($topic in $Topics) {
                     $data = @()
                     $hash = @{
@@ -314,13 +354,13 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                                 $_.value
                             }
                         })
-                    # "$data"
-                    $dsb1 = New-PSHTMLChartPolarAreaDataSet -Data $data -BackgroundColor $Colors -hoverBackgroundColor $HoverColors
-                    if ($dsb1) {
-                        New-PSHTMLChart -type polarArea -DataSet $dsb1 -title "Emotions [$($topic.BaseName)]" -Labels $Labels  -CanvasID $($topic.BaseName)
+                    $dataset_polarareachart = New-PSHTMLChartPolarAreaDataSet -Data $data -BackgroundColor $Colors -hoverBackgroundColor $HoverColors
+                    if ($dataset_polarareachart) {
+                        New-PSHTMLChart -type polarArea -DataSet $dataset_polarareachart -title "Emotions [$($topic.BaseName)]" -Labels $Labels  -CanvasID $($topic.BaseName)
                     }
                 }
             }
+            #endregion add-canvas-and-charts  
         }
     }
     # $OutPath = "$Home/RadarChart1.html"
@@ -332,7 +372,6 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
     $Response.Send($HTMLDocument)
 }
 #endregion create-home-page
-
 
 # start polaris web server
 $Polaris = Start-Polaris -Port 8080
