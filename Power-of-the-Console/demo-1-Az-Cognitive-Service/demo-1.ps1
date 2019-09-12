@@ -1,11 +1,13 @@
 $RootFolder = (Get-Location).Path
 $MediaFolder = Join-Path $RootFolder 'demo-1-Az-Cognitive-Service\Media'
 
+#region install-import-login-Azure
+
 # install module
-Install-Module PSCognitiveService -Force -Verbose
+Install-Module PSCognitiveService -Verbose
 
 # import module
-Import-Module PSCognitiveService -Force -Verbose
+Import-Module PSCognitiveService -Verbose
 
 # get module
 Get-Command -Module PSCognitiveService
@@ -15,35 +17,58 @@ if(!(Get-AzContext)){
     Connect-AzAccount -Verbose
 }
 else{
-    Write-Host "Already logged-in to Azure" -ForegroundColor Green
+    Write-Host "Already logged-in to Azure`n" -ForegroundColor Green
 }
+
+#endregion install-import-login-Azure
+
+#region local-and-azure-configuration
 
 # create cognitive service accounts in azure
 $ResourceGroup = 'demo-resource-group'
 $Location = 'CentralIndia'
-$CognitiveServices = 'ComputerVision','ContentModerator','Face','TextAnalytics','Bing.EntitySearch','Bing.Search.v7'
+$CognitiveServices = @( 'ComputerVision',
+                        'ContentModerator',
+                        'Face',
+                        'TextAnalytics',
+                        'Bing.EntitySearch',
+                        'Bing.Search.v7'
+)
 
 $CognitiveServices | ForEach-Object {
-    $splat = @{
+    $Params = @{
         AccountType       = $_ 
         ResourceGroupName = $ResourceGroup 
         SKUName           = 'F0' 
-        Location          = if($_ -like "Bing*"){'Global'}else{$Location}
+        Location          = if($_ -like "Bing*"){
+                                'Global'
+                            }
+                            else{$Location}
     }
-    New-CognitiveServiceAccount @splat | Out-Null
+    New-CognitiveServiceAccount @Params | Out-Null
 } 
 
-# add subscription key & location from azure to $profile 
-# as $env variable and load them in them in current session
-New-LocalConfiguration -FromAzure -AddKeysToProfile -Verbose | Out-Null
+# add subscription keys & location from azure 
+# to $profile as $env variables 
+# and load them in them in current session
+$null = New-LocalConfiguration -FromAzure `
+                               -AddKeysToProfile `
+                               -Verbose
 
-# face, age, gender detection & emotion recognition
+#endregion local-and-azure-configuration
+
+# detect face, age, gender & emotion
 $ImagePath = "$MediaFolder\Billgates.jpg"
-# Invoke-Item $ImagePath
-(Get-Face -Path $ImagePath). faceAttributes| Format-List *
+code $ImagePath
+
+Get-Face -Path $ImagePath |
+    ForEach-Object faceAttributes| 
+    Format-List *
 
 # image description
-(Get-ImageDescription -Path $ImagePath).Description | Format-List
+Get-ImageDescription -Path $ImagePath|
+    ForEach-Object Description | 
+    Format-List
 
 # tag image and convert to hashtags
 Get-ImageTag -URL https://goo.gl/Q73Qtw | 
@@ -55,9 +80,13 @@ Get-ImageText -URL https://goo.gl/XyP6LJ |
     ForEach-Object { $_.words.text -join " "}
 
 # convert to thumbnail 
-ConvertTo-Thumbnail -URL https://goo.gl/XyP6LJ `
-                    -SmartCropping -OutVariable tn
-Invoke-Item $tn.OutputFile
+$params = @{
+    URL  = 'https://goo.gl/XyP6LJ'
+    Width = 200
+    Height = 200
+}
+$Resized = ConvertTo-Thumbnail @params
+code $Resized.OutputFile.FullName
 
 # web search keywords
 Search-Web "powershell 7" -Verbose |
@@ -67,71 +96,95 @@ Search-Web "powershell 7" -Verbose |
 # entity search
 Search-Entity -Text "ISRO" | 
     ForEach-Object {$_.entities.value} | 
-    Format-List name, description, image, webSearchUrl
+    Format-List name, description, webSearchUrl
 
 # image search
-Search-Image -Text 'Jeffery Snover' -Count 5 | ForEach-Object {
-    Foreach($Url in $_.value.contenturl){
-        Start-Process $url -WindowStyle Minimized
-        Start-Sleep -Seconds 1
-    }
+$ImgURLs = (Search-Image -Text 'Jeffery Snover' `
+                        -Count 10).value.contenturl
+
+Foreach ($Url in $ImgURLs) {
+    Start-Process $url -WindowStyle Minimized
+    Start-Sleep -Seconds 1
 }
 
-# capture and store images from a web search
-$Keyword = 'Bangalore'
-$Results = (Search-Image -Text $Keyword -Count 20 -SafeSearch strict)
-$Results.value.contenturl | ForEach-Object {
-    try {
-        Start-Sleep -Seconds 1
-        # analyze image and get a caption
-        $caption = (Get-ImageDescription -URL $_).description.captions.text
+#region capture-and-store-images-from-a-web-search
 
-        # creates a logical file name
-        $filename = if ($caption) { $caption }else { 'untitled' }
+Invoke-Item C:\temp\
 
-        # add numbering in file name if captions are same
-        $path = "c:\temp\$filename.jpg"
-        $i = 1
-        while(Test-Path $path){
-            if($filename -like "*(*)*"){
-                $OpenBraces = $filename.IndexOf('(')
-                $filename = $($filename[0..($OpenBraces-1)] -join '') +" ($i)"
-            }
-            else{ $filename = $filename+" ($i)" }
-            $path = "c:\temp\$filename.jpg"; $i++
+$Params = @{
+    Text = "Bangalore"
+    Count = 10
+    Safesearch = 'Strict'
+    Verbose = $true
+}
+$Results = (Search-Image @Params).value.contenturl
+$Results | ForEach-Object {
+try {
+    # sleep to avoid exhausting API rate limits
+    Start-Sleep -Seconds 1 
+
+    # analyze image and get a caption
+    $desc = (Get-ImageDescription -URL $_).description
+    $filename = 'untitled'
+    $caption = $desc.captions.text
+
+    # creates a logical file name
+    $filename = $caption
+
+    # add numbers to file name for same captions
+    $path = "c:\temp\$filename.jpg"
+    $i = 1
+    while(Test-Path $path){
+        if($filename -like "*(*)*"){
+            $OpenBraces = $filename.IndexOf('(')
+            $filename = $($filename[0..($OpenBraces-1)] -join '') +"($i)"
         }
-        Write-Host "Downloading image as: $path" -ForegroundColor Cyan
-        
-        # download the images
-        Invoke-WebRequest "$_" -OutFile $path 
+        else{ $filename = $filename+"($i)" }
+        $path = "c:\temp\$filename.jpg"; $i++
     }
-    catch {
-        $_.exception.message
-    }
+    Write-Host "Downloading: $path" -ForegroundColor Cyan
+    
+    # download the images
+    Invoke-WebRequest "$_" -OutFile $path 
 }
+catch {
+    $_.exception.message
+}
+}
+#endregion capture-and-store-images-from-a-web-search
 
 # sentiment analysis
-Get-Sentiment -Text "I don't write pester tests!" | ForEach-Object { 
-    if($_.documents.score -lt 0.5){
+Get-Sentiment -Text "I don't write pester tests!" | 
+ForEach-Object { 
+    if ($_.documents.score -lt 0.5) {
         Write-Host 'Negative Sentiment' -ForegroundColor Red
-    }else{
+    }
+    else {
         Write-Host 'Positive Sentiment' -ForegroundColor Green
     }
 }
 
-$sentences = "Morning! Such a wonderful day", "I feel sad for the poor" 
+$sentences = @( "Morning! Such a wonderful day",
+                "I am feeling little sad today" )
 Get-Sentiment -Text $sentences | ForEach-Object {
     Foreach($item in $_.documents){
         [PSCustomObject]@{
             Text = $sentences[$($item.id-1)]
-            "Positivity" = "{0:P2}" -f $item.score
-            Sentiment = if($item.score -lt 0.5){'Negative'}else{'Positive'}
+            Positivity = "{0:P2}" -f $item.score
+            Sentiment = if($item.score -lt 0.5){
+                            'Negative'
+                        }
+                        else{
+                            'Positive'
+                        }
         }
     }
-}
+} | Format-List
 
 # indentify key phrases
-Get-KeyPhrase -Text "Such a wonderful day", "I feel sad about these poor people" | ForEach-Object documents
+Get-KeyPhrase -Text "Let's go for a run", 
+                    "Elon musk wants to inhabit mars" | 
+                    ForEach-Object documents
 
 $sentences = @'
 Welcome to the PowerShell GitHub Community!
@@ -148,38 +201,51 @@ Get-KeyPhrase -Text $sentences | ForEach-Object {
     }
 } | Format-List
 
+#region generate-word-cloud-from-a-web-search
+
 # web search a keyword to get snippets
 # extract key phrases from snippets
 # build a word cloud from these key phrases
 $Snippets = Search-Web "PowerShell Core" |
     ForEach-Object {$_.webpages.value.snippet} 
 
-$Phrases = (Get-KeyPhrase -Text $Snippets).documents.keyphrases.split(' ') 
+$Data = Get-KeyPhrase -Text $Snippets # extract keywords
+$Words = $Data.documents.keyphrases.split(' ') 
 
 $Path = "$env:TEMP\cloud.svg"
-$splat = @{
+$Params = @{
     Path = $Path
     Typeface = 'Consolas'
-    ImageSize = '5000x3000'
+    ImageSize = '3000x2000'
     AllowRotation = 'None'
+    Padding = 5
+    StrokeWidth = 1
 }
-$Phrases | New-WordCloud @splat -Verbose
-Invoke-Item $Path
+# generate word cloud using 'PSWordCloud' module
+$Words | New-WordCloud @Params
+Start-Process Chrome $Path
+
+#endregion generate-word-cloud-from-a-web-search
 
 
 # detect langauge
-$Languages = "Esto es en espanol","C'est en francais"    
+$Languages = @( "This is English",
+                "Esto es en espanol",
+                "C'est en francais")
 Trace-Language -Text $Languages |
     ForEach-Object {$_.documents.detectedlanguages}
 
 # moderate content - text, image (path/url)
-Test-AdultRacyContent -Text "Hello World" | 
-    ForEach-Object Classification
+Test-AdultRacyContent -Text "Hello World" -Verbose | 
+    ForEach-Object Classification |
+    Format-List
 
-Test-AdultRacyContent -Path $ImagePath
+Test-AdultRacyContent -Path $ImagePath -Verbose
 
+#region test-webpages-for-adult-racy-content
 
-# create a WebClient instance that will handle Network communications 
+# lets create a web scrape all images urls from my website
+# and check if any adult or racy content exists
 $Website = "http://www.ridicurious.com"
 $webclient = New-Object System.Net.WebClient
 $webpage = $webclient.DownloadString($Website)
@@ -199,9 +265,17 @@ ForEach($url in $ImgUrls.value) {
 
     Start-Sleep -Seconds 1
 }
+#endregion test-webpages-for-adult-racy-content
 
-
-
-# What's next
-* ticketing System
-* notes to speechs
+# Back to slides
+<# There can a dozen of usecases in IT
+    1. Ticketing System
+        Priortize\tag tickets based on customer comment sentiment
+    2. Github
+        Content moderation bots
+    3. Chat Ops [PoshBots]
+        Image analysis and understanding the intent
+        "restart 'server1' in 30 mins"
+    4. Learning
+         Convert notes to Speach [text to speech] 
+#>

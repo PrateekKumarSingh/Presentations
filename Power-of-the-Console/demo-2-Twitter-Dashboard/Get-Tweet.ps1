@@ -6,7 +6,17 @@ param(
     $Mins = 1
 )
 
-$filepath = ".\data\{0}.csv" -f $Search.Replace('#', '')
+# Write-Host " [+] Logged-in to Azure" -ForegroundColor Green
+if(Get-AzContext){
+    Write-Host " [+] Logged-in to Azure" -ForegroundColor Green
+    # New-LocalConfiguration -FromAzure *>&1 | Out-Null
+}
+else{
+    Write-Host " [-] Please Login to Azure" -ForegroundColor Red
+    break;
+}
+
+$filepath = "$PSScriptRoot\data\{0}.csv" -f $Search.Replace('#', '')
 If (Test-Path $filepath) {
     $Content = Import-Csv $filepath -ErrorAction SilentlyContinue
 }
@@ -20,7 +30,7 @@ else {
 }
 
 $modules = 'pscognitiveservice', 'PSTwitterAPI'
-Write-Host " [+] Importing required modules: $($modules -join ', ')" -ForegroundColor Green
+Write-Host " [+] Importing Required Modules: $($modules -join ', ')" -ForegroundColor Green
 Import-Module $modules -PassThru | Format-Table Name, Version -AutoSize
 
 while ($true) {
@@ -38,8 +48,8 @@ while ($true) {
     }
 
     $configs = @{ }
-    # Get-Content $PSScriptRoot/config.txt | ForEach-Object {
-    Get-Content .\config.txt | ForEach-Object {
+    Get-Content $PSScriptRoot/config.txt | ForEach-Object {
+    # Get-Content .\config.txt | ForEach-Object {
         $key, $value = $_.split('=')    
         $configs[$key] = $value
     }
@@ -87,7 +97,7 @@ while ($true) {
         | Sort-Object  retweet_count, favorite_count -Descending `
         | Select-Object *, `
         @{n = 'ContentModeration'; e = {
-                $reccomendation = (Test-AdultRacyContent -Text $_.text -ErrorAction SilentlyContinue).classification.ReviewRecommended
+                $reccomendation = (Test-AdultRacyContent -Text $_.text).classification.ReviewRecommended
                 if ($reccomendation -eq 'true') {
                     "Need Review"
                 }
@@ -97,11 +107,11 @@ while ($true) {
             }
         }, `
         @{n = 'sentiments'; e = { 
-                (Get-Sentiment -Text $_.text -ErrorAction SilentlyContinue).documents.score
+                (Get-Sentiment -Text $_.text).documents.score
             }
         }, `
         @{n = 'Emotion'; e = { 
-                $Score = (Get-Face -URL $_.user_profile_image_url.replace('normal', '200x200') -ErrorAction SilentlyContinue).faceattributes.emotion
+                $Score = (Get-Face -URL $_.user_profile_image_url.replace('normal', '200x200')).faceattributes.emotion
                 $Emotion = @{
                     Anger     = $Score.anger
                     Contempt  = $Score.contempt
@@ -117,25 +127,28 @@ while ($true) {
                 $StrongestEmotion = $Emotion.GetEnumerator() | Sort-Object value -Descending | Select-Object -First 1
 
                 if ($score) {
-                    "{0}, {1:P}" -f $StrongestEmotion.name, $StrongestEmotion.Value
+                    "{0}: {1:P}" -f $StrongestEmotion.name, $StrongestEmotion.Value
                     # $Score.foreach({"{0:P}" -f [double]$_}) -join  ', '
                 }
                 else {
                     'No face detected'
                 }
-                Start-Sleep -Seconds 1
+                Start-Sleep -Seconds 5
             }
         } 
     
         Write-Host "    [+] Max ID: $Max_Id" -ForegroundColor Green
         Write-Host "    [+] Filtered tweets in last $Mins minutes: $($Results.count)" -ForegroundColor Green
-        $Results | Format-List date, screen_name, text, sentiments, happiness, ContentModeration
         
-        $Results | Export-Csv $filepath -NoTypeInformation -Verbose -Encoding UTF8 -Append
+        if($Results){
+            $Results | Format-List date, screen_name, text, Sentiments, Emotion, ContentModeration
+            Write-Host "    [+] Tweets export to: $(Split-Path $filepath -Leaf)" -ForegroundColor Green
+            $Results | Export-Csv $filepath -NoTypeInformation -Encoding UTF8 -Append -QuoteFields id,screen_name,date,retweet_count,favorite_count,"text",url,user_name,user_screen_name,user_description,user_profile_image_url,user_followers_count,user_friends_count,user_favourites_count,user_statuses_count,retweeted_status,sensitive
+        }
+
         $Content = Import-Csv $filepath -ErrorAction SilentlyContinue
         $Host.UI.RawUI.WindowTitle = "Search: $Search | Count: $(if($content){$Content.count}else{0})" 
         Write-Host " [+] Sleeping for $Mins minutes.. `n" -ForegroundColor DarkMagenta
-
     }
     Start-Sleep -Seconds (60 * $Mins)
     # }

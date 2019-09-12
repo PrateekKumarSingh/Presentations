@@ -2,7 +2,7 @@ if($ENV:COMPUTERNAME -eq 'WIN-P5TILMPQ856'){
     $Path = 'C:\Users\Administrator\Desktop\repo\psconfasia2019\Power-of-the-Console'
 }
 else{
-    $Path = 'D:\Workspace\Repository\Psconfasia2019\Power-of-the-Console' 
+    $Path = 'D:\Workspace\Repository\Presentations\Power-of-the-Console' 
 }
 
 Set-Location $Path -ErrorAction SilentlyContinue
@@ -34,5 +34,13 @@ Describe "Setup" {
     it 'Check Progress Preference' {
         $ProgressPreference = 'SilentlyContinue'
         $ProgressPreference -eq 'SilentlyContinue' | Should Be $true
+    }
+    it 'Check C:\Temp is empty' {
+        Get-ChildItem C:\temp | Remove-Item -Force
+        !(Get-ChildItem C:\temp) | Should Be $true
+    }
+    it 'Check .\demo-2-Twitter-Dashboard\data\ is empty' {
+        Get-ChildItem .\demo-2-Twitter-Dashboard\data\  | Remove-Item -Force
+        !(Get-ChildItem .\demo-2-Twitter-Dashboard\data\ ) | Should Be $true
     }
 }
