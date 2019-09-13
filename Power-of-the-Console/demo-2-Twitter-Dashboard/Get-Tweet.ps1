@@ -94,9 +94,8 @@ while ($true) {
             }
         } | Sort-Object date -Descending `
         | Where-Object { (-not $_.retweeted_status) } `
-        | Sort-Object  retweet_count, favorite_count -Descending `
         | Select-Object *, `
-        @{n = 'ContentModeration'; e = {
+        @{n = 'ContentModerationStatus'; e = {
                 $reccomendation = (Test-AdultRacyContent -Text $_.text).classification.ReviewRecommended
                 if ($reccomendation -eq 'true') {
                     "Need Review"
@@ -106,8 +105,15 @@ while ($true) {
                 }
             }
         }, `
+        @{n = 'ContentModerationPicture'; e = {
+                $Evaluation = Test-AdultRacyContent -URL $_.user_profile_image_url.replace('normal', '200x200')
+                if ($Evaluation) {
+                    "Adult: {0}, Racy: {1}" -f $Evaluation.IsImageAdultClassified, $Evaluation.IsImageRacyClassified
+                }
+            }
+        }, `
         @{n = 'sentiments'; e = { 
-                (Get-Sentiment -Text $_.text).documents.score
+                #(Get-Sentiment -Text $_.text).documents.score
             }
         }, `
         @{n = 'Emotion'; e = { 
@@ -126,11 +132,7 @@ while ($true) {
                         Surprise  = $Score.surprise   
                     }
     
-                    #Most Significant Emotion = Highest Decimal Value in all Emotion objects
-                    # $StrongestEmotion = $Emotion.GetEnumerator() | Sort-Object value -Descending | Select-Object -First 1
                     ($Emotion.GetEnumerator() | Foreach-Object {$_.name+":"+$_.value}) -join ';'
-                    # "{0}: {1:P}" -f $StrongestEmotion.name, $StrongestEmotion.Value
-                    # $Score.foreach({"{0:P}" -f [double]$_}) -join  ', '
                 }
                 else {
                     'No face detected'
@@ -143,9 +145,9 @@ while ($true) {
         Write-Host "    [+] Filtered tweets in last $Mins mins: $($Results.count)" -ForegroundColor Green
         
         if($Results){
-            $Results | Format-List date, screen_name, text, Sentiments, Emotion, ContentModeration
+            $Results | Format-List date, screen_name, text, Sentiments, Emotion, ContentModerationStatus, ContentModerationPicture
             Write-Host "    [+] Tweets export to: $(Split-Path $filepath -Leaf)" -ForegroundColor Green
-            $Results | Export-Csv $filepath -NoTypeInformation -Encoding UTF8 -Append -QuoteFields id,screen_name,date,retweet_count,favorite_count,"text",url,user_name,user_screen_name,user_description,user_profile_image_url,user_followers_count,user_friends_count,user_favourites_count,user_statuses_count,retweeted_status,sensitive,sentiments,emotion,ContentModeration
+            $Results | Export-Csv $filepath -NoTypeInformation -Encoding UTF8 -Append -QuoteFields id,screen_name,date,retweet_count,favorite_count,"text",url,user_name,user_screen_name,user_description,user_profile_image_url,user_followers_count,user_friends_count,user_favourites_count,user_statuses_count,retweeted_status,sensitive,sentiments,emotion,ContentModerationStatus, ContentModerationPicture
         }
 
         $Content = Import-Csv $filepath -ErrorAction SilentlyContinue

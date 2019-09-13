@@ -23,6 +23,7 @@ ForEach ($Topic in $Topics) {
     `$tweets = Import-Csv ".\Data\$Topic.csv"
         head {
             meta -charset 'utf-8'
+            meta -httpequiv 'refresh' -content { 60 }
             # '<meta http-equiv="refresh" content="10">'
             Title "$Topic [`$(`$Tweets.count)]"
             link -rel "stylesheet" -type "text/css" -href "css/jquery.dataTables.css"
@@ -55,10 +56,44 @@ input {
 
 `'@
             }
+
+            script -content {
+@`'
+                         var countDownDate = new Date();
+                         countDownDate.setMinutes( countDownDate.getMinutes() + 1 );
+                
+                // Update the count down every 1 second
+                var x = setInterval(function() {
+                
+                  // Get today's date and time
+                  var now = new Date().getTime();
+                    
+                  // Find the distance between now and the count down date
+                  var distance = countDownDate - now;
+                    
+                  // Time calculations for days, hours, minutes and seconds
+                  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                  // Output the result in an element with id="demo"
+                  document.getElementById("demo").innerHTML = "Refresh: " + seconds + " Secs";
+                    
+                  // If the count down is over, write some text 
+                  if (distance < 0) {
+                    clearInterval(x);
+                    document.getElementById("demo").innerHTML = "EXPIRED";
+                  }
+                }, 1000);
+`'@
+                            }            
+            
         } -Class 'init'
         body {
             '<center>'
-            h1 -class "display-4" -content { "Live Twitter Feed for: $topic"}
+            h1 -class "display-5" -content { "Live Twitter Feed for: <b><i><font color='ROYALBLUE'> $topic</font></b></i>"}
+            p -id 'demo'
             '</center>'
             ol -Class breadcrumb -Content {
                 li -Class breadcrumb-item -Content {
@@ -155,7 +190,21 @@ input {
                             }
             
                             td -Content {
-                                `$item.ContentModeration
+                                p -content {
+                                    if(`$item.ContentModerationStatus){
+                                        "<b>Text:</b><br>`$(`$item.ContentModerationStatus)"
+                                    }
+                                    else{
+                                        "<b>Text:</b><br> No Data"
+                                    }
+                                    "<br>"
+                                    if(`$item.ContentModerationPicture){
+                                        "<b>Picture:</b><br>`$(`$item.ContentModerationPicture.Replace(';',' '))"
+                                    }
+                                    else{
+                                        "<b>Picture:</b><br> No Data"
+                                    }
+                                }
                             }
                                 
                             td -Content { 
@@ -218,18 +267,18 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
     $HTMLDocument = html { 
         head {
             title 'Home - Stats'
-            meta -httpequiv 'refresh' -content {60}
+            meta -httpequiv 'refresh' -content { 60 }
             link -rel "stylesheet" -type "text/css" -href "css/jquery.dataTables.css"
             link -rel "stylesheet" -type "text/css" -href "css/dataTables.material.min.css"
             link -rel "stylesheet" -type "text/css" -href "css/material.min.css"
             link -rel "stylesheet" -type "text/css" -href "css/bootstrap.css"
             script -type "text/javascript" -src "https://canvasjs.com/assets/script/canvasjs.min.js"
-            # <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
         }
         body {
             #region add-heading-and-bread-crumbs
             '<center>'
             h1 -class "display-4" -content { "Statistics" }
+            p -Id 'demo' # adds a refresh timer
             '</center>'
             ol -Class breadcrumb -Content {
                 li -Class breadcrumb-item -Content {
@@ -253,29 +302,13 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                 $canvas += canvas -Style "width: 30%; height: 300px ;display: inline-block;" -Id $radarCanvas1 { }
                 $canvas += canvas -Style "width: 30%; height: 300px ;display: inline-block;" -Id $radarCanvas2 { }
 
-            
                 $Topics = Get-ChildItem .\data\
                 $Topics.BaseName | ForEach-Object {
                     $canvas += canvas -Id $_ { } -Style "width: 30%; height: 300px ;display: inline-block;"
                 }
-
+                '<center>'
                 $canvas
-
-                # $Topics = Get-ChildItem .\data\
-                # For($i=0;$i -lt $Topics.count; $i++) {
-                #     canvas -Id $topics[$i].BaseName -Style "width: 45%; height: 300px" #;display: inline-block;"
-                #     if(!(($i+1)%2)){
-                #         br # adds a break tag after every two graphs
-                #     }
-                # }
-
-                # <div id="chartContainer1" style="width: 45%; height: 300px;display: inline-block;"></div> 
-                # <div id="chartContainer2" style="width: 45%; height: 300px;display: inline-block;"></div><br/>
-                # <div id="chartContainer3" style="width: 45%; height: 300px;display: inline-block;"></div>
-                # <div id="chartContainer4" style="width: 45%; height: 300px;display: inline-block;"></div>
-
-                # adds canvas in a tabular format
-                # table { tr {  $canvas | ForEach-Object { td { $_ } } } }
+                '</center>'
             }
             script -src "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js" -type "text/javascript"
             script -type "text/javascript" -src "js/jquery-3.3.1.js" -Attributes @{charset = "utf8" }
@@ -286,42 +319,47 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                 $Labels = $Topics.BaseName
                 $dataset_radarchart = @() 
 
-                # get tweets captured data
-                $data = Foreach ($topic in $Topics) {
+                # get number tweets captured data
+                $CurrenTweetCount = Foreach ($topic in $Topics) {
                     (Import-Csv $topic.FullName).count
                 }
-                $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $Data -label 'Tweets Captured' -borderColor (get-pshtmlColor -color 'blue') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'Red')
-
-                # pie chart
-                $Data_PieChart = $data
-                $data|Out-File .\data\numberoftweets.txt -Append
-
-                # get content length data
-                $data = Foreach ($topic in $Topics) {
+                # get content data length
+                $DataLength = Foreach ($topic in $Topics) {
                     [int]((Get-Item  $topic.FullName).length / 1kb)
                 }
-                $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $Data -label 'Data [kb]' -borderColor (get-pshtmlColor -color 'Green') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'olive')
-                New-PSHTMLChart -type radar -DataSet $dataset_radarchart -title "Radar Chart Example" -Labels $Labels -CanvasID $radarCanvas0 
+
+                # radar chart
+                $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $CurrenTweetCount -label '# Tweets Captured' -borderColor (get-pshtmlColor -color 'Blue') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'Red') -borderWidth 2
+                $dataset_radarchart += New-PSHTMLChartBarDataSet -Data $DataLength -label 'Data [kb]' -borderColor (get-pshtmlColor -color 'DarkRed') -backgroundColor "transparent" -hoverBackgroundColor (get-pshtmlColor -color 'olive') -borderWidth 2
+                New-PSHTMLChart -type radar -DataSet $dataset_radarchart -title "Total Tweets and Data Collected" -Labels $Labels -CanvasID $radarCanvas0 
+                
+                # manages tweet count history
+                $PrevTweetCount = Get-Content $env:TEMP\numberoftweets.txt -ErrorAction SilentlyContinue
+                $CurrenTweetCount | Out-File $env:TEMP\numberoftweets.txt
                 
                 # pie chart - tweet distribution
-                $colors = @("Lightgreen","red","Blue","Yellow","Yellow","DarkRed")
-                $DataSet_PieChart = New-PSHTMLChartPieDataSet -Data $Data_PieChart -label "March" -BackgroundColor $Colors
-                New-PSHTMLChart -type Pie -DataSet $Dataset_PieChart -title "Tweet distribution" -Labels $Labels -CanvasID $radarCanvas1
+                $Data_PieChart = $CurrenTweetCount
+                $colors = @("LightSalmon", "DarkRed", "Purple", "Navy", "Teal", "DodgerBlue", "MediumVioletRed", "LightGreen")
+                $DataSet_PieChart = New-PSHTMLChartPieDataSet -Data $Data_PieChart -label "Tweets per Topic" -BackgroundColor $Colors
+                New-PSHTMLChart -type Pie -DataSet $Dataset_PieChart -title "Topic distribution" -Labels $Labels -CanvasID $radarCanvas1
     
                 # line chart - number of tweets per 10 seconds
-                $n = 0
-                $Data_LineChart = gc .\data\numberoftweets.txt | ForEach-Object {
-                    $data[$n] - $_
-                    $n=$n+1
+                $Data_LineChart = For ($n = 0; $n -lt $PrevTweetCount.count; $n++) {
+                    $diff = $($CurrenTweetCount[$n]) - $($PrevTweetCount[$n])
+                    if ($diff -lt 0) {
+                        0
+                    }
+                    else {
+                        $diff
+                    }
                 }
-                $DataSet_LineChart = New-PSHTMLChartLineDataSet -Data $Data_LineChart -label "March" -FillbackgroundColor ([color]::new(0,0,0)) -LineColor 'LightGreen'
+                $DataSet_LineChart = New-PSHTMLChartLineDataSet -Data $Data_LineChart -FillbackgroundColor ([color]::new(32, 178, 170)) -LineColor 'DarkGreen' -LineWidth 3
                 New-PSHTMLChart -type line -DataSet $Dataset_LineChart -title "Tweet Captured / Minute" -Labels $Labels -CanvasID $radarCanvas2
     
-
                 # get emotion data for each topic
                 Foreach ($topic in $Topics) {
                     $data = @()
-                    $hash = @{
+                    $hash = [Ordered] @{
                         Surprise  = 0
                         Sadness   = 0
                         Happiness = 0
@@ -342,9 +380,10 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                         }
                         $counter = $counter + 1
                     }
-                    $Labels = 'Fear', 'Anger', 'Sadness', 'Contempt', 'Disgust', 'Neutral', 'Happiness', 'Surprise'
-                    $Colors = @('Grey', 'red', 'DarkCyan', 'green', 'DarkGreen', 'yellow', 'Orange', 'grey'       )
-                    $HoverColors = @('black', 'darkred', 'Orange', 'grey', 'DarkGrey', 'blue', 'Magenta', 'DarkMagenta')
+                    # $EmotionLabels = 'Surprise','Sadness','Happiness','Neutral','Fear', 'Anger', 'Disgust','Contempt'
+                    $EmotionLabels = $hash.Keys
+                    $Colors = @('OrangeRed', 'LightSalmon', 'Green', 'LightSteelBlue ', 'SteelBlue', 'DarkRed', 'pink', 'MediumOrchid' )
+                    $HoverColors = @('LightSalmon', 'OrangeRed', 'LightSeaGreen', 'SteelBlue', 'LightSteelBlue', 'tomato', 'Magenta', 'MediumVioletRed ')
                     
                     $data = $hash.GetEnumerator().ForEach( {
                             if ($_.value) {
@@ -356,11 +395,48 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                         })
                     $dataset_polarareachart = New-PSHTMLChartPolarAreaDataSet -Data $data -BackgroundColor $Colors -hoverBackgroundColor $HoverColors
                     if ($dataset_polarareachart) {
-                        New-PSHTMLChart -type polarArea -DataSet $dataset_polarareachart -title "Emotions [$($topic.BaseName)]" -Labels $Labels  -CanvasID $($topic.BaseName)
+                        New-PSHTMLChart -type polarArea -DataSet $dataset_polarareachart -title "Emotions [$($topic.BaseName)]" -Labels $EmotionLabels  -CanvasID $($topic.BaseName)
                     }
                 }
+
+
             }
-            #endregion add-canvas-and-charts  
+            #endregion add-canvas-and-charts
+            
+            #region javascript-for-refresh-timer
+            script -content {
+                @"
+         var countDownDate = new Date();
+         countDownDate.setMinutes( countDownDate.getMinutes() + 1 );
+
+// Update the count down every 1 second
+var x = setInterval(function() {
+
+  // Get today's date and time
+  var now = new Date().getTime();
+    
+  // Find the distance between now and the count down date
+  var distance = countDownDate - now;
+    
+  // Time calculations for days, hours, minutes and seconds
+  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+  // Output the result in an element with id="demo"
+  document.getElementById("demo").innerHTML = "Refresh: " + seconds + " Secs";
+    
+  // If the count down is over, write some text 
+  if (distance < 0) {
+    clearInterval(x);
+    document.getElementById("demo").innerHTML = "EXPIRED";
+  }
+}, 1000);
+"@
+            }
+            #endregion javascript-for-refresh-timer
+
         }
     }
     # $OutPath = "$Home/RadarChart1.html"
