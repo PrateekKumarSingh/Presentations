@@ -67,8 +67,8 @@ while ($true) {
     Write-Host " [+] Fetching Recent Tweets: $Search" -ForegroundColor Green
     $Results = Get-TwitterSearch_Tweets @splat
     $SearchMetadata = $results.search_metadata
-    Write-Host "    [+] Completed in $($SearchMetadata.completed_in)" -ForegroundColor Green
-    Write-Host "    [+] Count: $($SearchMetadata.count)" -ForegroundColor Green
+    Write-Host "    [+] Completed in $($SearchMetadata.completed_in)" -ForegroundColor Cyan
+    Write-Host "    [+] Count: $($SearchMetadata.count)" -ForegroundColor Cyan
 
     if ($Results) {
         $Max_Id = $SearchMetadata.max_id 
@@ -141,12 +141,12 @@ while ($true) {
             }
         } 
     
-        Write-Host "    [+] Max ID: $Max_Id" -ForegroundColor Green
-        Write-Host "    [+] Filtered tweets in last $Mins mins: $($Results.count)" -ForegroundColor Green
+        Write-Host "    [+] Max ID: $Max_Id" -ForegroundColor Cyan
+        Write-Host "    [+] Filtered tweets in last $Mins mins: $($Results.count)" -ForegroundColor Cyan
         
         if($Results){
             $Results | Format-List date, screen_name, text, Sentiments, Emotion, ContentModerationStatus, ContentModerationPicture
-            Write-Host "    [+] Tweets export to: $(Split-Path $filepath -Leaf)" -ForegroundColor Green
+            Write-Host "    [+] Tweets export to: $(Split-Path $filepath -Leaf)" -ForegroundColor Cyan
             $Results | Export-Csv $filepath -NoTypeInformation -Encoding UTF8 -Append -QuoteFields id,screen_name,date,retweet_count,favorite_count,"text",url,user_name,user_screen_name,user_description,user_profile_image_url,user_followers_count,user_friends_count,user_favourites_count,user_statuses_count,retweeted_status,sensitive,sentiments,emotion,ContentModerationStatus, ContentModerationPicture
         }
 

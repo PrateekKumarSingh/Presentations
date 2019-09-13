@@ -11,7 +11,9 @@ $ErrorActionPreference = 'SilentlyContinue'
 $PSDefaultParameterValues['Start-Process:Passthru']= $true
 Import-Module Gridify
 
-Write-Host "[+] Searching Keywords: $Keywords" -ForegroundColor Green   
+Write-Host "[+] Searching Keywords: " -ForegroundColor Green -NoNewline
+Write-Host "$($Keywords.ForEach({"$_"}) -join ', ')" -ForegroundColor Yellow 
+
 Write-Host "[+] Configuring pwsh.exe with fresh API Keys" -ForegroundColor Green   
 
 & 'C:\Program Files\PowerShell\7-preview\pwsh.exe' -Command { 

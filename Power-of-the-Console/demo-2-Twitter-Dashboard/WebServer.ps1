@@ -353,7 +353,7 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                         $diff
                     }
                 }
-                $DataSet_LineChart = New-PSHTMLChartLineDataSet -Data $Data_LineChart -FillbackgroundColor ([color]::new(32, 178, 170)) -LineColor 'DarkGreen' -LineWidth 3
+                $DataSet_LineChart = New-PSHTMLChartLineDataSet -Data $Data_LineChart -LineColor 'DarkGreen' -LineWidth 3 -label '# of Tweets'
                 New-PSHTMLChart -type line -DataSet $Dataset_LineChart -title "Tweet Captured / Minute" -Labels $Labels -CanvasID $radarCanvas2
     
                 # get emotion data for each topic
@@ -395,7 +395,7 @@ New-PolarisGetRoute -Path "/" -Scriptblock {
                         })
                     $dataset_polarareachart = New-PSHTMLChartPolarAreaDataSet -Data $data -BackgroundColor $Colors -hoverBackgroundColor $HoverColors
                     if ($dataset_polarareachart) {
-                        New-PSHTMLChart -type polarArea -DataSet $dataset_polarareachart -title "Emotions [$($topic.BaseName)]" -Labels $EmotionLabels  -CanvasID $($topic.BaseName)
+                        New-PSHTMLChart -type polarArea -DataSet $dataset_polarareachart -title "Emotions - $($topic.BaseName)" -Labels $EmotionLabels  -CanvasID $($topic.BaseName)
                     }
                 }
 
