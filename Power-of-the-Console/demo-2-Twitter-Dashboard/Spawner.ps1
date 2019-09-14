@@ -1,5 +1,5 @@
 param(
-    [Parameter(Position=0)] [String[]] $Keywords = @('powershell','linux','pwsh','azure'),
+    [Parameter(Position=0)] [String[]] $Keywords = @('powershell','linux','devops','azure'),
     [Parameter(Position=1)][int] $Count = 10,
     [Parameter(Position=2)][String] $CustomLayout,
     [Parameter(Position=3)]$MaxStepsOnYAxis = 3,

@@ -113,7 +113,7 @@ while ($true) {
             }
         }, `
         @{n = 'sentiments'; e = { 
-                #(Get-Sentiment -Text $_.text).documents.score
+                (Get-Sentiment -Text $_.text).documents.score
             }
         }, `
         @{n = 'Emotion'; e = { 
@@ -135,7 +135,19 @@ while ($true) {
                     ($Emotion.GetEnumerator() | Foreach-Object {$_.name+":"+$_.value}) -join ';'
                 }
                 else {
-                    'No face detected'
+                    # 'No face detected'
+                    $Emotion = @{
+                        Anger     = 0
+                        Contempt  = 0
+                        Disgust   = 0
+                        Fear      = 0
+                        Happiness = 0
+                        Neutral   = 0
+                        Sadness   = 0
+                        Surprise  = 0
+                    }
+    
+                    ($Emotion.GetEnumerator() | Foreach-Object {$_.name+":"+$_.value}) -join ';'
                 }
                 Start-Sleep -Seconds 5
             }
