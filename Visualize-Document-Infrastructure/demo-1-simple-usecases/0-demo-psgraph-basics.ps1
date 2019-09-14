@@ -23,7 +23,7 @@ $tree | Export-PSGraph
 
 # using paramters
 graph 'myfamily' {
-    Edge -From father -To daughter, son
+    Edge -From Bob -To Maya, John
 } | Export-PSGraph
 
 # adding nodes to a graph
@@ -32,7 +32,7 @@ graph 'myfamily' {
     Edge -From father -To daughter, son
     # Edge -From mother -To daughter, son
     # mind the case-sensitivity
-    # Edge -From mother -To daughter, Son
+    # Edge -From Mother -To daughter, son
 } | Export-PSGraph
 
 
@@ -49,7 +49,7 @@ graph 'myfamily' {
 graph 'myfamily' {
     # generic node without a name for all the node defined below
     # attributes apply to all nodes
-    node @{ shape= 'diamond'; style= 'filled'; color = 'grey'; comment ='test'} 
+    node @{ shape= 'diamond'; style= 'filled'; color = 'grey'} 
     node mother -Attributes @{
         shape="rect"
         color='yellowgreen'
@@ -74,6 +74,8 @@ graph 'myfamily' {
     Edge -From mother -To daughter, son -Attributes @{color='magenta'}
     edge @{ style='dashed'; color = 'black';} 
     Edge -From father -To uncle
+
+    # rank them on same level
     rank -Nodes mother, father, uncle
 } | Export-PSGraph
 
@@ -103,18 +105,22 @@ graph 'biggerfamily' @{label='bigger family'} {
         Edge -From uncle, aunty -To cousin
     }
     
-    edge @{constraint=$false}
+    # edge @{constraint=$false}
     Edge -From father -To uncle @{style='dashed'}
 } | Export-PSGraph
 #endregion simple-family-tree
+
+break;
 
 #region simple-usecases
 
 # a simple expression in Abstract Syntax tree
 Import-Module PSGraphPlus # import this helper module
-# $expression = {(2*15)/3}
-$expression = {((2*15/(1+7))/3)*(11+5)}
+$expression = {(2*15)/3}
+# $expression = {((2*15/(1+7))/3)*(11+5)}
 Show-AstGraph -ScriptBlock $expression -Raw | Export-PSGraph
+
+break;
 
 # directory tree
 Function Get-FolderSize
@@ -134,7 +140,9 @@ Function Get-FolderSize
         } 
     } 
 }       
-$directory = 'C:\Users\'
+$directory = '.'
+# $directory = 'D:\Workspace\Repository'
+$heatmapcolors = "#FF0000","#FF0500","#FF1000","#FF2000","#FF2500","#FF3000","#FF3500","#FF4000","#FF4500","#FF5000","#FF5500","#FF6000","#FF6500","#FF7000","#FF7500","#FF8000","#FF8500","#FF9000","#FF9500","#FFA000","#FFB000","#FFC000","#FFD000","#FFE000","#FFF000","#FFFF00", "#F5FF00","#F0FF00","#E5FF00","#E0FF00","#D5FF00","#D0FF00","#C5FF00","#C0FF00","#B5FF00","#B0FF00","#A5FF00","#A0FF00","#95FF00","#90FF00","#95FF00","#85FF00","#80FF00","#75FF00","#70FF00","#65FF00","#60FF00","#55FF00","#50FF00","#45FF00","#40FF00","#35FF00","#30FF00","#25FF00","#20FF00","#15FF00","#10FF00"
 $folders = Get-ChildItem -Path $directory `
                          -Recurse `
                          -ErrorAction SilentlyContinue -Depth 2|
@@ -146,45 +154,45 @@ $folders = Get-ChildItem -Path $directory `
                 }
             } |
             Sort-Object Size -Descending
-$heatmapcolors = "#FF0000","#FF0500","#FF1000","#FF2000","#FF2500","#FF3000","#FF3500","#FF4000","#FF4500","#FF5000","#FF5500","#FF6000","#FF6500","#FF7000","#FF7500","#FF8000","#FF8500","#FF9000","#FF9500","#FFA000","#FFB000","#FFC000","#FFD000","#FFE000","#FFF000","#FFFF00", "#F5FF00","#F0FF00","#E5FF00","#E0FF00","#D5FF00","#D0FF00","#C5FF00","#C0FF00","#B5FF00","#B0FF00","#A5FF00","#A0FF00","#95FF00","#90FF00","#95FF00","#85FF00","#80FF00","#75FF00","#70FF00","#65FF00","#60FF00","#55FF00","#50FF00","#45FF00","#40FF00","#35FF00","#30FF00","#25FF00","#20FF00","#15FF00","#10FF00"
 
 $i=0
 $Step = [math]::Ceiling(($heatmapcolors.count/$folders.Count))
 graph TreeSize @{fontname = "verdana" } {
     node @{shape = 'folder' }
-    # node $folders -NodeScript { $_.fullname } @{label = {$_.basename}} 
-    node $folders -NodeScript { $_.fullname } @{
-        label = {
-            $SizeUnit = ''
-            if ($_.Size -ge 1GB) {
-                 $SizeUnit = 'Gb'
-            }
-            elseif ($_.Size -ge 1Mb) { 
-                $SizeUnit = 'Mb'
-            }
-            elseif ($_.Size -ge 1kb) {
-                 $SizeUnit = 'Kb'
-                }
-
-            if($SizeUnit){
-                "{2}\n[{0:N2} {1}]" -f ($_.Size/(Invoke-Expression "1$SizeUnit")), $SizeUnit, $_.basename
-            }
-            else{
-                "{1}\n[{0} Bytes]" -f $_.Size, $_.basename
-            }    
-        }
-        style='filled'
-        color={$heatmapcolors[$i];$i=$i+$Step}
-        fontname = "verdana, bold" ;
-        fontsize = 11
-    } 
+    node $folders -NodeScript { $_.fullname } @{label = {$_.basename}} 
+    # node $folders -NodeScript { $_.fullname } @{
+    #     label = {
+    #         $SizeUnit = ''
+    #         if ($_.Size -ge 1GB) {
+    #              $SizeUnit = 'Gb'
+    #         }
+    #         elseif ($_.Size -ge 1Mb) { 
+    #             $SizeUnit = 'Mb'
+    #         }
+    #         elseif ($_.Size -ge 1kb) {
+    #              $SizeUnit = 'Kb'
+    #             }
+    #         if($SizeUnit){
+    #             "{2}\n[{0:N2} {1}]" -f ($_.Size/(Invoke-Expression "1$SizeUnit")), $SizeUnit, $_.basename
+    #         }
+    #         else{
+    #             "{1}\n[{0} Bytes]" -f $_.Size, $_.basename
+    #         }    
+    #     }
+    #     style='filled'
+    #     color={$heatmapcolors[$i];$i=$i+$Step}
+    #     fontname = "verdana, bold" ;
+    #     fontsize = 11
+    # } 
     edge $folders `
         -FromScript { split-path $_.fullname } `
         -ToScript { $_.fullname } 
 } | ForEach-Object { $_.replace('\', '\\').replace('\\n', '\n') } |
-Export-PSGraph -ShowGraph
+Export-PSGraph
 
-# Network connections
+break;
+
+# Network connections - Local to Remote
 $netstat = Get-NetTCPConnection -State Established|
            Where-Object LocalAddress -NotIn ':','127.0.0.1'
 
@@ -198,10 +206,12 @@ graph network @{rankdir = 'LR'; label = 'Network Connections' } {
             }
         }
     $netstat.LocalAddress+$netstat.RemoteAddress |
-    Select-Object -Unique |
+    Select-Object -Unique|
+    Select-Object -First 5 |
     ForEach-Object {
         Write-Host "Resolving DNS Name for: $($_)" -ForegroundColor Yellow -NoNewline
-        $Name = (Resolve-DnsName $_ -ErrorAction SilentlyContinue).namehost
+        $Name = (Resolve-DnsName $_ -ErrorAction SilentlyContinue).namehost |
+                Select-Object -First 1
         if($Name){
             Write-Host " [$name]" -ForegroundColor Green
             Node $_ @{label={"{0}\n[{1}]" -f $_, $name}}

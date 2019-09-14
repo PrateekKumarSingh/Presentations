@@ -82,7 +82,6 @@ X-Microsoft-Antispam-Message-Info:
  =?us-ascii?Q?iZFEsnSzHViHk5tKzPYfWNebrQIz3MsSqX4JKPp6ssEMo056JLh7E0arPzQ?=
  =?us-ascii?Q?=3D?=
 "@
-
 Function ConvertFrom-EmailHeader {
     Param($Header)
     $Pattern = 'Received: from([\s\S]*?)by([\s\S]*?)with([\s\S]*?);([(\s\S)*]{32,36})(?:\s\S*?)'

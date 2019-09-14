@@ -1,10 +1,4 @@
-if($ENV:COMPUTERNAME -eq 'WIN-P5TILMPQ856'){
-    $Path = 'C:\Users\Administrator\Desktop\repo\Presentations\Power-of-the-Console'
-}
-else{
-    $Path = 'D:\Workspace\Repository\Presentations\Power-of-the-Console' 
-}
-
+$Path = 'D:\Workspace\Repository\Presentations\Power-of-the-Console' 
 Set-Location $Path -ErrorAction SilentlyContinue
 
 # verify dependent modules are loaded

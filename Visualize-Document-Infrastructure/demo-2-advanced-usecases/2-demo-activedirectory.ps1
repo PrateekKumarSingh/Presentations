@@ -2,6 +2,7 @@
 # a simple (static) org tree
 
 Graph org {
+    # malissa, Bob report to John
     edge -From John -to Malissa, Bob
     edge -From Malissa -to Rakesh, Sam, Joanah
     edge -From Bob -to Charlie, Mandie, Joel
@@ -55,10 +56,10 @@ Graph orgchart @{fontname = "verdana" } {
 break; 
 
 #region active-directory-user-group-mapping
+
 # rights and permissions mappings to each nested groups 
 
-$Session = New-PSSession -ComputerName DC1 -Credential $Creds
-$Membership = Invoke-Command -Session $Session `
+$Membership = Invoke-Command -ComputerName DC1 `
     -ScriptBlock {
     $Groups = Get-ADGroup -Filter * |
               Where-Object {$_.name -ne 'Domain Users'}

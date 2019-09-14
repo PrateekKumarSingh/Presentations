@@ -65,6 +65,7 @@ graph -Name SimpleHyperV `
             }
 
             ForEach ($machine in ($map[$i].machines)) { 
+                # check if machines if UP from Hyper-v host
                 if (Test-Connection $machine -Quiet -Count 1) {
                     node $machine @{
                         style = 'filled'
@@ -118,6 +119,7 @@ graph -Name SimpleHyperV `
 Get-VM democl1 | Stop-VM -Verbose
 # Get-VM democl1 | Start-VM -Verbose
 #>
+
 #endregion hyperv-infra-connectivity
 
 break;
@@ -142,7 +144,6 @@ graph -Name HyperV `
                         "Memory : {0} GB" -f ($VM.MemoryAssigned /1gb)
                         "Uptime : {0} hours" -f $VM.Uptime.hours
                         'State  : {0}' -f $VM.State
-                        # 'NetworkAdapters: {0}' -f $VM.NetworkAdapters
                     )
                     $AssociatedTo = ([xml]$VM.notes).Associated
                     if ($AssociatedTo) {   

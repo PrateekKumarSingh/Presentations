@@ -1,5 +1,8 @@
-$Path = 'D:\Workspace\Repository\Psconfasia2019\Visualize-Document-Infrastructure' 
+$Path = 'D:\Workspace\Repository\Presentations\Visualize-Document-Infrastructure' 
 Set-Location $Path -ErrorAction SilentlyContinue
+
+# Launch PowerShell v5
+# PowerShell.exe -version 5
 
 # verify dependent modules are loaded
 $DependentModules = 'PSGraph', 'PSGraphPlus','Polaris', 'PSHTML', 'PoshRSJob', 'PowerShellForGithub', 'az'
@@ -13,8 +16,8 @@ if ($missing) {
 
 # start required virtual machines 
 $VM = 'DC1','SRV1','SRV2', 'democl1', 'democl2', 'demodc', 'mylabcl1','mylabcl2','mylabdc1'
-Get-VM -Name $VM | 
-Where-Object {$_.State -ne 'Running'} -ov stopped 
+$stopped = Get-VM -Name $VM | 
+Where-Object {$_.State -ne 'Running'}
 # else{
 if($stopped){
     $stopped | 
@@ -38,6 +41,9 @@ Graph demo {
 
 Clear-Host
 Describe "Setup" {
+    it 'Check PowerShell v5' {
+        $PSVersionTable.PSVersion.Major -eq 5 | Should be $true
+    }    
     it 'Check current working directory' {
         (Get-Location).Path -eq $Path | Should be $true
     }

@@ -1,3 +1,6 @@
+
+# http://armviz.io/designer
+
 # using Azure Network watcher to generate resource associations
 # which will be used to build the Azure Network topolgy
 $networkWatcher = Get-AzNetworkWatcher -Name NetworkWatcher_centralindia -ResourceGroup NetworkWatcherRG 
@@ -5,7 +8,13 @@ $ResourceGroups = Get-AzResourceGroup |
 Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
 # Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
 ForEach-Object ResourceGroupName  
-   
+
+<#
+$Topology = Get-AzNetworkWatcherTopology -NetworkWatcher $networkWatcher -TargetResourceGroupName 'demo-resource-group' -Verbose
+$Topology.resources 
+#>
+
+
 #region defaults
 $rank = @{
     publicIPAddresses     = 0

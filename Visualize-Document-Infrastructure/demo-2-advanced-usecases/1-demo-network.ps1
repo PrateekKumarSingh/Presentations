@@ -22,7 +22,7 @@ $Scriptblock = {
     }
 }
 
-$Net = Invoke-Command -ComputerName DC1 -Credential $creds -ScriptBlock $Scriptblock
+$Net = Invoke-Command -ComputerName DC1 -ScriptBlock $Scriptblock
 
 graph network @{rankdir = 'LR' } {
     node @{shape = 'rect' }
@@ -70,7 +70,6 @@ Foreach ($Item in $Map) {
         # test ports from source machine to the destination machines
         Foreach ($port in $ports) {
             Foreach ($destination in $Using:Item.Destination) {
-                # '{0} {1}' -f $destination, $port
                 Write-host "Testing Port:`"$port`" Source:`"$env:COMPUTERNAME`" to Destination:`"$($Destination)`"" -ForegroundColor Yellow -NoNewline
                 Test-NetConnection $destination -Port $port -WarningAction SilentlyContinue -OutVariable conn
                 If($Conn.TcpTestSucceeded){
@@ -83,8 +82,7 @@ Foreach ($Item in $Map) {
         }
     }
     $Temp = Invoke-Command -ComputerName $Item.Source `
-        -Credential $creds `
-        -ScriptBlock $Scriptblock
+    -ScriptBlock $Scriptblock
     $results += $temp             
 }
 
