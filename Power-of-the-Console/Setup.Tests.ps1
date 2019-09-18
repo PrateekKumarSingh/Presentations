@@ -1,5 +1,7 @@
 $Path = 'D:\Workspace\Repository\Presentations\Power-of-the-Console' 
 Set-Location $Path -ErrorAction SilentlyContinue
+$RootFolder = (Get-Location).Path
+$MediaFolder = Join-Path $RootFolder 'demo-1-Az-Cognitive-Service\Media'
 
 # verify dependent modules are loaded
 $DependentModules = 'PSCognitiveService', 'Pester', 'Gridify','Graphical', 'PSHTML', 'Polaris', 'az', 'PSWordCloud','PSTwitterAPI'

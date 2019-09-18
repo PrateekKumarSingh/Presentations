@@ -5,7 +5,7 @@ Set-Location $Path -ErrorAction SilentlyContinue
 # PowerShell.exe -version 5
 
 # verify dependent modules are loaded
-$DependentModules = 'PSGraph', 'PSGraphPlus','Polaris', 'PSHTML', 'PoshRSJob', 'PowerShellForGithub', 'az'
+$DependentModules = 'PSGraph', 'PSGraphPlus','Polaris', 'PSHTML', 'PoshRSJob', 'PowerShellForGithub', 'az','AutomatedLab'
 $Installed = Import-Module $DependentModules -PassThru -ErrorAction SilentlyContinue| Where-Object { $_.name -In $DependentModules }
 $missing = $DependentModules | Where-Object { $_ -notin $Installed.name }
 if ($missing) {

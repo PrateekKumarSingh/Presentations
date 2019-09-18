@@ -5,7 +5,7 @@ $Scriptblock = {
     Where-Object DistinguishedName -NotLike "*Domain*Controllers*" |
     Select-Object name, IPV4Address
 
-    $ports = 80, 443, 139, 445
+    $ports = 80, 139, 445
   
     # test ports from source machine to the destination machines
     Foreach ($port in $ports) {

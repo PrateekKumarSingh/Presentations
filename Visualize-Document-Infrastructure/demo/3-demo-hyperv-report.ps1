@@ -2,7 +2,7 @@ $colors = 'blue', 'darkgreen', 'magenta', 'gray', 'orange', 'maroon'
 
 # Map the lab enviroment into clusters of related nodes, domains, address space
 $Map = 'test', 'demo'| ForEach-Object {
-    Import-Lab -Name $_ -NoValidation -NoDisplay
+    Import-Lab -Name $_ -NoValidation -NoDisplay -ErrorAction SilentlyContinue
     $Lab = Get-Lab
     [pscustomobject]@{
         Cluster      = $_
@@ -117,7 +117,7 @@ graph -Name SimpleHyperV `
 
 <# 
 Get-VM democl1 | Stop-VM -Verbose
-# Get-VM democl1 | Start-VM -Verbose
+Get-VM democl1 | Start-VM -Verbose
 #>
 
 #endregion hyperv-infra-connectivity

@@ -17,18 +17,18 @@ break;
 # organization hierarchy generation usig GraphViz
 # cluster user in departments, like Finance, HR, Tech etc
 
-$data = Import-Csv .\src\org.csv
+$data = Import-Csv .\demo\src\org.csv
 
 Graph orgchart @{fontname = "verdana" } {
     # create records with details: title, department and city
     Foreach ($d in $data ) {
         $Manager = $d.name
-        # Node -Name $Manager
-        Record -Name $Manager {
-            row -Label "Title: $($d.title)"
-            row -Label "Department: $($d.department)"
-            row -Label "City: $($d.city)"
-        }
+        Node -Name $Manager
+        # Record -Name $Manager {
+        #     row -Label "Title: $($d.title)"
+        #     row -Label "Department: $($d.department)"
+        #     row -Label "City: $($d.city)"
+        # }
         # create a edge from each manager to his/her direct reports
         foreach ($reports in $d.directreports.split(';')) {
             $Report = $reports.split(',')[0].replace('CN=', '')
@@ -55,33 +55,3 @@ Graph orgchart @{fontname = "verdana" } {
 
 break; 
 
-#region active-directory-user-group-mapping
-
-# rights and permissions mappings to each nested groups 
-
-$Membership = Invoke-Command -ComputerName DC1 `
-    -ScriptBlock {
-    $Groups = Get-ADGroup -Filter * |
-              Where-Object {$_.name -ne 'Domain Users'}
-                     
-    Foreach ($group in $Groups) {
-        $users = @()
-        $subgroup = @()
-        $members = $group | Get-ADGroupMember -Recursive
-        Foreach ( $Member in $members) {
-            [PSCustomObject] @{
-                From = $Group.name
-                To = $Member.name
-            }
-        }
-    }                        
-} | Get-Random -Count 40
-
-Graph ADGroupMembership @{rankdir='LR'} {
-    $Membership | ForEach-Object{
-        Node -Name $Membership.From @{Shape='Rect'}
-        edge -from $_.from -to $_.to
-    }
-}  |Export-PSGraph
-
-#endregion active-directory-user-group-mapping

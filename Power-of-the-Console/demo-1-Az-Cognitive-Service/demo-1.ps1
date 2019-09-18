@@ -4,7 +4,7 @@ $MediaFolder = Join-Path $RootFolder 'demo-1-Az-Cognitive-Service\Media'
 #region install-import-login-Azure
 
 # install module
-Install-Module PSCognitiveService -Verbose
+# Install-Module PSCognitiveService -Verbose -Force -Confirm:$false
 
 # import module
 Import-Module PSCognitiveService -Verbose
@@ -59,9 +59,9 @@ $null = New-LocalConfiguration -FromAzure `
 
 # detect face, age, gender & emotion
 $ImagePath = "$MediaFolder\Billgates.jpg"
-code $ImagePath
+# code $ImagePath
 
-Get-Face -Path $ImagePath |
+Get-Face -Path $ImagePath -Verbose |
     ForEach-Object faceAttributes| 
     Format-List *
 
@@ -70,36 +70,20 @@ Get-ImageDescription -Path $ImagePath|
     ForEach-Object Description | 
     Format-List
 
-# tag image and convert to hashtags
-Get-ImageTag -URL https://goo.gl/Q73Qtw | 
-    ForEach-Object{$_.tags.name.foreach({"#"+$_})} 
-
 # optical character recognition
 Get-ImageText -URL https://goo.gl/XyP6LJ |
     ForEach-Object {$_.regions.lines} | 
     ForEach-Object { $_.words.text -join " "}
-
-# convert to thumbnail 
-$params = @{
-    URL  = 'https://goo.gl/XyP6LJ'
-    Width = 200
-    Height = 200
-}
-$Resized = ConvertTo-Thumbnail @params
-code $Resized.OutputFile.FullName
 
 # web search keywords
 Search-Web "powershell 7" -Verbose |
     ForEach-Object {$_.webpages.value} | 
     Format-List name, url, snippet 
 
-# entity search
-Search-Entity -Text "ISRO" | 
-    ForEach-Object {$_.entities.value} | 
-    Format-List name, description, webSearchUrl
-
 # image search
-$ImgURLs = (Search-Image -Text 'Jeffery Snover' `
+$keyword = 'Jeffery Snover'
+# $keyword = 'Will Smith'
+$ImgURLs = (Search-Image -Text $keyword `
                         -Count 10).value.contenturl
 
 Foreach ($Url in $ImgURLs) {
@@ -154,18 +138,9 @@ catch {
 #endregion capture-and-store-images-from-a-web-search
 
 # sentiment analysis
-Get-Sentiment -Text "I don't write pester tests!" | 
-ForEach-Object { 
-    if ($_.documents.score -lt 0.5) {
-        Write-Host 'Negative Sentiment' -ForegroundColor Red
-    }
-    else {
-        Write-Host 'Positive Sentiment' -ForegroundColor Green
-    }
-}
-
 $sentences = @( "Morning! Such a wonderful day",
-                "I am feeling little sad today" )
+                "I am feeling little sad today",
+                "I don't write pester tests!" )
 Get-Sentiment -Text $sentences | ForEach-Object {
     Foreach($item in $_.documents){
         [PSCustomObject]@{
@@ -182,10 +157,6 @@ Get-Sentiment -Text $sentences | ForEach-Object {
 } | Format-List
 
 # indentify key phrases
-Get-KeyPhrase -Text "Let's go for a run", 
-                    "Elon musk wants to inhabit mars" | 
-                    ForEach-Object documents
-
 $sentences = @'
 Welcome to the PowerShell GitHub Community!
 PowerShell Core is a cross-platform (Windows, Linux, and macOS) automation and configuration tool/framework that works well with your existing tools and is optimized
@@ -199,21 +170,21 @@ Get-KeyPhrase -Text $sentences | ForEach-Object {
             KeyPhrases = $item.keyPhrases
         }
     }
-} | Format-List
+} | ForEach-Object KeyPhrases
 
 #region generate-word-cloud-from-a-web-search
 
 # web search a keyword to get snippets
 # extract key phrases from snippets
 # build a word cloud from these key phrases
-$Snippets = Search-Web "PowerShell Core" |
+$Snippets = Search-Web "PowerShell Conference Asia" |
     ForEach-Object {$_.webpages.value.snippet} 
 
-$Data = Get-KeyPhrase -Text $Snippets # extract keywords
+$Data = Get-KeyPhrase -Text $Snippets -ea SilentlyContinue  # extract keywords
 $Words = $Data.documents.keyphrases.split(' ') 
 
 $Path = "$env:TEMP\cloud.svg"
-$Params = @{
+$Params = @{`
     Path = $Path
     Typeface = 'Consolas'
     ImageSize = '3000x2000'
@@ -222,6 +193,7 @@ $Params = @{
     StrokeWidth = 1
 }
 # generate word cloud using 'PSWordCloud' module
+Import-Module PSWordCloud
 $Words | New-WordCloud @Params
 Start-Process Chrome $Path
 
@@ -239,8 +211,6 @@ Trace-Language -Text $Languages |
 Test-AdultRacyContent -Text "Hello World" -Verbose | 
     ForEach-Object Classification |
     Format-List
-
-Test-AdultRacyContent -Path $ImagePath -Verbose
 
 #region test-webpages-for-adult-racy-content
 
@@ -267,7 +237,6 @@ ForEach($url in $ImgUrls.value) {
 }
 #endregion test-webpages-for-adult-racy-content
 
-# Back to slides
 <# There can a dozen of usecases in IT
     1. Ticketing System
         Priortize\tag tickets based on customer comment sentiment
@@ -276,6 +245,6 @@ ForEach($url in $ImgUrls.value) {
     3. Chat Ops [PoshBots]
         Image analysis and understanding the intent
         "restart 'server1' in 30 mins"
-    4. Learning
-         Convert notes to Speach [text to speech] 
 #>
+
+# Back to slides

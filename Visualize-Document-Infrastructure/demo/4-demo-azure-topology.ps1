@@ -1,17 +1,24 @@
 
 # http://armviz.io/designer
+# Start-Process chrome 'http://armviz.io'
+# Start-Process chrome 'https://github.com/Azure/azure-quickstart-templates/tree/master/101-vm-with-rdp-port'
 
 # using Azure Network watcher to generate resource associations
 # which will be used to build the Azure Network topolgy
-$networkWatcher = Get-AzNetworkWatcher -Name NetworkWatcher_centralindia -ResourceGroup NetworkWatcherRG 
+$params = @{
+    Name = 'NetworkWatcher_centralindia'
+    ResourceGroup = 'NetworkWatcherRG'
+}
+
+$networkWatcher = Get-AzNetworkWatcher @params 
 $ResourceGroups = Get-AzResourceGroup | 
-Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
-# Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
+# Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
+Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
 ForEach-Object ResourceGroupName  
 
 <#
 $Topology = Get-AzNetworkWatcherTopology -NetworkWatcher $networkWatcher -TargetResourceGroupName 'demo-resource-group' -Verbose
-$Topology.resources 
+$Topology.Resources 
 #>
 
 
@@ -143,18 +150,22 @@ Graph 'AzureTopology' @{overlap = 'false'; splines = 'true' ;rankdir='TB'} {
             if ($pubip) {
                 $pubip | ForEach-Object {
                     if ($_.Category -eq 'fromcateg') {
+                        $ip = (Get-AzResource -name $_.from -ExpandProperties).Properties.ipaddress
                         $from = $_.from
                         node "$UniqueIdentifier$from" -Attributes @{
-                            Label = "$from";
+                            # Label = "$from";
+                            Label = "$from\n$ip";
                             shape = "$($Shapes[$($_.fromcateg)])";
                             style = "$($style[$($_.fromcateg)])" ;
                             fillcolor = "$($color[$($_.fromcateg)])"
                         }
                     }
                     else {
+                        $ip = (Get-AzResource -name $_.to -ExpandProperties).Properties.ipaddress
                         $to = $_.to
                         node "$UniqueIdentifier$to" -Attributes @{
-                            Label = "$to";
+                            # Label = "$to";
+                            Label = "$to\n$ip";
                             shape = "$($Shapes[$($_.tocateg)])";
                             style = "$($style[$($_.tocateg)])" ;
                             fillcolor = "$($color[$($_.tocateg)])"
