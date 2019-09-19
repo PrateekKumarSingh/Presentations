@@ -23,12 +23,12 @@ Graph orgchart @{fontname = "verdana" } {
     # create records with details: title, department and city
     Foreach ($d in $data ) {
         $Manager = $d.name
-        Node -Name $Manager
-        # Record -Name $Manager {
-        #     row -Label "Title: $($d.title)"
-        #     row -Label "Department: $($d.department)"
-        #     row -Label "City: $($d.city)"
-        # }
+        # Node -Name $Manager
+        Record -Name $Manager {
+            row -Label "Title: $($d.title)"
+            row -Label "Department: $($d.department)"
+            row -Label "City: $($d.city)"
+        }
         # create a edge from each manager to his/her direct reports
         foreach ($reports in $d.directreports.split(';')) {
             $Report = $reports.split(',')[0].replace('CN=', '')

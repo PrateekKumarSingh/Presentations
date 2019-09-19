@@ -44,12 +44,14 @@ graph network @{rankdir = 'LR' } {
 #endregion Demo-2.1-One-to-Many-Port-Connectivity
 
 break;
+
+
 #region Demo-2.2-Many-to-Many-Port-Connectivity
 
 $Servers = 'dc1', 'srv1', 'srv2'
 $results = @() # empty array to store telnet results
 
-# create a array of [PSCustomObject] with many-to-many server mappings
+# create a [PSCustomObject[]] with many-to-many server mappings
 $Map = For ($i = 0; $i -lt $Servers.Count; $i++) {
     [PSCustomObject]@{
         Source      = $Servers[$i]
@@ -66,7 +68,7 @@ $Map = For ($i = 0; $i -lt $Servers.Count; $i++) {
 # for a specific port
 Foreach ($Item in $Map) {
     $Scriptblock = {
-        $Ports = 80, 139, 445, 3389
+        $Ports = 80, 445, 3389
         # test ports from source machine to the destination machines
         Foreach ($port in $ports) {
             Foreach ($destination in $Using:Item.Destination) {

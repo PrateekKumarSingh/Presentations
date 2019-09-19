@@ -100,7 +100,7 @@ break;
 # a simple expression in Abstract Syntax tree
 Import-Module PSGraphPlus # import this helper module
 $expression = {(2*15)/3}
-$expression = {((2*15/(1+7))/3)*(11+5)}
+# $expression = {((2*15/(1+7))/3)*(11+5)}
 Show-AstGraph -ScriptBlock $expression -Raw | Export-PSGraph
 
 break;

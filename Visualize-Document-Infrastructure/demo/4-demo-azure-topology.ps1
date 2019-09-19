@@ -1,5 +1,3 @@
-
-# http://armviz.io/designer
 # Start-Process chrome 'http://armviz.io'
 # Start-Process chrome 'https://github.com/Azure/azure-quickstart-templates/tree/master/101-vm-with-rdp-port'
 
@@ -12,8 +10,8 @@ $params = @{
 
 $networkWatcher = Get-AzNetworkWatcher @params 
 $ResourceGroups = Get-AzResourceGroup | 
-# Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
-Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
+Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
+# Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
 ForEach-Object ResourceGroupName  
 
 <#
@@ -150,22 +148,22 @@ Graph 'AzureTopology' @{overlap = 'false'; splines = 'true' ;rankdir='TB'} {
             if ($pubip) {
                 $pubip | ForEach-Object {
                     if ($_.Category -eq 'fromcateg') {
-                        $ip = (Get-AzResource -name $_.from -ExpandProperties).Properties.ipaddress
+                        # $ip = (Get-AzResource -name $_.from -ExpandProperties).Properties.ipaddress
                         $from = $_.from
                         node "$UniqueIdentifier$from" -Attributes @{
-                            # Label = "$from";
-                            Label = "$from\n$ip";
+                            Label = "$from";
+                            # Label = "$from\n$ip";
                             shape = "$($Shapes[$($_.fromcateg)])";
                             style = "$($style[$($_.fromcateg)])" ;
                             fillcolor = "$($color[$($_.fromcateg)])"
                         }
                     }
                     else {
-                        $ip = (Get-AzResource -name $_.to -ExpandProperties).Properties.ipaddress
                         $to = $_.to
+                        # $ip = (Get-AzResource -name $_.to -ExpandProperties).Properties.ipaddress
                         node "$UniqueIdentifier$to" -Attributes @{
-                            # Label = "$to";
-                            Label = "$to\n$ip";
+                            Label = "$to";
+                            # Label = "$to\n$ip";
                             shape = "$($Shapes[$($_.tocateg)])";
                             style = "$($style[$($_.tocateg)])" ;
                             fillcolor = "$($color[$($_.tocateg)])"
@@ -229,12 +227,10 @@ Graph 'AzureTopology' @{overlap = 'false'; splines = 'true' ;rankdir='TB'} {
                     $vm | ForEach-Object {
                         if ($_.Category -eq 'fromcateg') {
                             $from = $_.from
-                            # Write-host "From:$from , FromCateg:$($_.fromcateg)" -ForegroundColor Yellow
                             node "$UniqueIdentifier$from" -Attributes @{Label = "$from"; shape = "$($Shapes[$($_.fromcateg)])"; style = "$($style[$($_.fromcateg)])" ; fillcolor = "$($color[$($_.fromcateg)])" }
                         }
                         else {
                             $to = $_.to
-                            # Write-host "to:$to , toCateg:$($_.tocateg)" -ForegroundColor Yellow
                             node "$UniqueIdentifier$to" -Attributes @{Label = "$to"; shape = "$($Shapes[$($_.tocateg)])"; style = "$($style[$($_.tocateg)])" ; fillcolor = "$($color[$($_.tocateg)])" }
                         }
                     }
@@ -254,13 +250,11 @@ Graph 'AzureTopology' @{overlap = 'false'; splines = 'true' ;rankdir='TB'} {
                 $remaining | ForEach-Object {
                     if ($_.Category -eq 'fromcateg') {
                         $from = $_.from
-                        # Write-host "From:$from , FromCateg:$($_.fromcateg)" -ForegroundColor Yellow
                         node "$UniqueIdentifier$from" -Attributes @{Label = "$from"; shape = "$($Shapes[$($_.fromcateg)])"; style = "$($style[$($_.fromcateg)])" ; fillcolor = "$($color[$($_.fromcateg)])" }
                     }
                     else {
                         $to = $_.to
                         if (![string]::IsNullOrEmpty($to)) {
-                            # Write-host "to:$to , toCateg:$($_.tocateg)" -ForegroundColor Yellow
                             node "$UniqueIdentifier$to" -Attributes @{Label = "$to"; shape = "$($Shapes[$($_.tocateg)])"; style = "$($style[$($_.tocateg)])" ; fillcolor = "$($color[$($_.tocateg)])" }
                         }
                     }
