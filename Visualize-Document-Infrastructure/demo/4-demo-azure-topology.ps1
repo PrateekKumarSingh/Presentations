@@ -10,8 +10,8 @@ $params = @{
 
 $networkWatcher = Get-AzNetworkWatcher @params 
 $ResourceGroups = Get-AzResourceGroup | 
-    Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
-    # Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
+    # Where-Object { $_.ResourceGroupName -in 'DEMO-RESOURCE-GROUP'} |
+    Where-Object { $_.ResourceGroupName -in 'my-resource-group','DEMO-RESOURCE-GROUP', 'test-resource-group', 'DEMO2-RESOURCE-GROUP'  } |
 ForEach-Object ResourceGroupName  
 
 <#

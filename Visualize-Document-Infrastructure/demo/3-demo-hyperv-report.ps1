@@ -115,12 +115,13 @@ graph -Name SimpleHyperV `
     }
 } | Export-PSGraph
 
+
+#endregion hyperv-infra-connectivity
+
 <# 
 Get-VM democl1 | Stop-VM -Verbose
 Get-VM democl1 | Start-VM -Verbose
 #>
-
-#endregion hyperv-infra-connectivity
 
 break;
 
