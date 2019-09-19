@@ -25,40 +25,24 @@ graph 'myfamily' {
 graph 'myfamily' {
     node mother -Attributes @{
         shape="rect"
+        style="filled"
+        color="YellowGreen"
     }
     Edge -From father -To daughter, son -Attributes @{color='blue'}
     Edge -From mother -To daughter, son -Attributes @{color='magenta'}
-} | Export-PSGraph
-
-# generic nodes and edges
-graph 'myfamily' {
-    # generic node without a name for all the node defined below
-    # attributes apply to all nodes
-    node @{ shape= 'diamond'; style= 'filled'; color = 'grey'} 
-    node mother -Attributes @{
-        shape="rect"
-        color='yellowgreen'
-    }
-    Edge -From father -To daughter, son -Attributes @{color='blue'}
-    Edge -From mother -To daughter, son -Attributes @{color='magenta'}
-    
-    # generic edge for all the edges defined below
-    # i.e, top to down processing
-    edge @{ style='dashed'; color = 'black';} 
-    Edge -From father -To uncle
+    Edge -From father -to uncle -Attributes @{style='dashed'}
 } | Export-PSGraph
 
 # ranking nodes
 graph 'myfamily' {
-    node @{ shape= 'diamond'; style= 'filled'; color = 'grey'; comment ='test'} 
     node mother -Attributes @{
         shape="rect"
-        color='yellowgreen'
+        style="filled"
+        color="YellowGreen"
     }
     Edge -From father -To daughter, son -Attributes @{color='blue'}
     Edge -From mother -To daughter, son -Attributes @{color='magenta'}
-    edge @{ style='dashed'; color = 'black';} 
-    Edge -From father -To uncle
+    Edge -From father -to uncle -Attributes @{style='dashed'}
 
     # rank them on same level
     rank -Nodes mother, father, uncle
@@ -66,9 +50,9 @@ graph 'myfamily' {
 
 # graph attributes like, rankdir and label
 graph 'myfamily' @{rankdir="LR";label='family tree'} {
-    node @{ shape= 'diamond'; style= 'filled'; color = 'grey'; comment ='test'} 
     node mother -Attributes @{
         shape="rect"
+        style="filled"
         color='yellowgreen'
     }
     Edge -From father -To daughter, son -Attributes @{color='blue'}
@@ -88,22 +72,15 @@ graph 'biggerfamily' @{label='bigger family'} {
         Edge -From uncle, aunty -To cousin
     }
     
-    edge @{constraint=$false}
+    # edge @{constraint=$false}
     Edge -From father -To uncle @{style='dashed'}
 } | Export-PSGraph
+
 #endregion simple-family-tree
 
 break;
 
 #region simple-usecases
-
-# a simple expression in Abstract Syntax tree
-Import-Module PSGraphPlus # import this helper module
-$expression = {(2*15)/3}
-# $expression = {((2*15/(1+7))/3)*(11+5)}
-Show-AstGraph -ScriptBlock $expression -Raw | Export-PSGraph
-
-break;
 
 # directory tree
 . .\demo\src\Get-FolderSize.ps1
