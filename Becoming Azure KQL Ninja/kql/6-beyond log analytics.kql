@@ -1,0 +1,26 @@
+// cross resource queries
+
+workspace("loganalytics-2").Heartbeat // different log analytics workspace table
+| take 10 
+
+adx('https://help.kusto.windows.net/Samples').StormEvents // azure data explorer cluster
+
+
+// external data
+// what could be the usecase? ** HINT: alert suppressions / maintance windows
+external_data(
+    network:string,
+    geoname_id:long,
+    continent_code:string,
+    continent_name:string ,
+    country_iso_code:string,
+    country_name:string,
+    is_anonymous_proxy:bool,
+    is_satellite_provider:bool
+)
+['https://raw.githubusercontent.com/datasets/geoip2-ipv4/master/data/geoip2-ipv4.csv']
+| distinct network | where network != "network"
+| summarize make_list(network)
+
+
+// Workspace functions

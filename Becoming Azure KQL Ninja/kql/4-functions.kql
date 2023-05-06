@@ -1,0 +1,63 @@
+// user defined functions (UDF)
+// ----------------------------------
+
+// more like a lambda function
+let IncrementBy2 = (arg0:long = 0) { arg0 + 2 };
+range x from 1 to 10 step 1
+| project x, x_plus_1 = IncrementBy2(x)
+
+// calculator
+let Calculator = (value1: int, value2: int, operand: string) {
+    // switch case
+    case(
+        operand == "+", value1 + value2,
+        operand == "-", value1 - value2,
+        operand == "*", value1 * value2,
+        operand == "/", value1 / value2,
+        0);
+};
+datatable(value1: int, value2: int, operand: string)
+[
+    5.0, 3.0, "+",
+    8.0, 2.0, "-",
+    4.0, 2.0, "*",
+    10.0, 2.0, "/",
+]
+| project Result = strcat(value1, operand, value2, '=', tostring(Calculator(value1, value2, operand)))
+
+// built-in scalar functions 
+// ----------------------------------
+
+// subtracts the given timespan from now()
+Heartbeat | where TimeGenerated > ago(5m) 
+
+// current UTC time
+print now()
+
+// absolute value
+print abs(-5) 
+
+// string manipulations
+// --------------------------
+
+// concatenation
+print str = strcat("hello", " ", "world") 
+
+// string trimming
+let original = "--https://bing.com--";
+let totrim = "--";
+print   original = original, 
+        trimmed_string = trim(totrim,original), // trim()
+        trimmed_start = trim_start(totrim,original), // trim_start()
+        trimmed_end= trim_end(totrim,original) // trim_end()
+
+// string splitting
+let str = "contoso.microsoft.com";
+print   split(str,".") // ['contoso', 'microsoft', 'com']
+
+// string replace
+let str = "contoso.microsoft.com";
+print   replace_string(str,"."," ") // replace_string()
+
+let str = "contoso.microsoft.com";
+print   replace_string(replace_string(str,"."," "),'o','0') // replace_string()

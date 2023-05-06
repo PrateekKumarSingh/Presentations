@@ -1,0 +1,66 @@
+// visualizations
+// ------------------------
+
+// cpu utilization trend - line chart
+InsightsMetrics
+| where Namespace  == "Processor" and Name == "UtilizationPercentage"
+| summarize avg(Val) by Computer, bin(TimeGenerated, 5m)
+| render timechart
+
+// cpu utilization trend - column chart
+InsightsMetrics
+| where Namespace  == "Processor" and Name == "UtilizationPercentage"
+| summarize avg(Val) by Computer, bin(TimeGenerated, 15m)
+| render columnchart 
+
+
+// storm events per state - pie chart
+StormEvents
+| summarize statecount=count() by State
+| sort by statecount 
+| take 10
+| render piechart with(title="Storm Events by State")
+
+
+// anomaly detection
+InsightsMetrics
+| where Namespace == "Processor" and Name == "UtilizationPercentage"
+| make-series Average=avg(Val) on TimeGenerated from ago(1d) to now() step 15m
+| extend Anomalies = series_decompose_anomalies(Average)
+| render timechart  with (ytitle="Value", anomalycolumns=Anomalies)
+
+// forecasting
+InsightsMetrics
+| where Namespace == "Processor" and Name == "UtilizationPercentage"
+| make-series cpu=avg(Val) on TimeGenerated from ago(1d) to now()+6h step 5m
+| extend cpu_forcasted = series_decompose_forecast(cpu, 1)
+| render timechart
+
+// cross resource queries
+
+
+workspace("loganalytics-2").Heartbeat // different log analytics workspace table
+| take 10 
+
+
+adx('https://help.kusto.windows.net/Samples').StormEvents // azure data explorer cluster
+
+
+// external data
+// what could be the usecase? ** HINT: alert suppressions / maintance windows
+external_data(
+    network:string,
+    geoname_id:long,
+    continent_code:string,
+    continent_name:string ,
+    country_iso_code:string,
+    country_name:string,
+    is_anonymous_proxy:bool,
+    is_satellite_provider:bool
+)
+['https://raw.githubusercontent.com/datasets/geoip2-ipv4/master/data/geoip2-ipv4.csv']
+| distinct network | where network != "network"
+| summarize make_list(network)
+
+
+// Workspace functions

@@ -1,0 +1,22 @@
+// basic search
+InsightsMetrics
+| search "memory"
+
+// search everything
+search "START" 
+| take 5
+
+// searching all tables
+search * | distinct $table
+
+// search multiple tables
+search in (AppPerformanceCounters, InsightsMetrics) "memory"
+| where TimeGenerated > ago(10m)
+| take 50
+
+// search using a regex pattern
+VMProcess
+| where ExecutableName matches regex "(lsass|powershell)"
+| project Description, ExecutableName, PID=FirstPid, CommandLine
+
+search  * | where * matches regex @"^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$" // regex for url

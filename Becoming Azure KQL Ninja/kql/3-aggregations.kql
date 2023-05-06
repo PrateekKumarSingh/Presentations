@@ -1,0 +1,22 @@
+// avg()
+InsightsMetrics
+| where TimeGenerated > ago(2h)
+| where Namespace == "Processor" and Name contains "UtilizationPercentage"
+| summarize Cpu = round(avg(Val),2) by bin(TimeGenerated,15m), Computer // summarize Aggregation by GroupExpression
+
+// count(), countif()
+StormEvents| take 1000 
+| where State startswith "W"
+| summarize Count=count() by State
+
+range x from 1 to 10 step 1
+| summarize countif(x%2==0) // count only even numbers
+
+// min(), max()
+StormEvents | take 1000 
+| where State startswith "A"
+| summarize EarliestEvent=min(StartTime), LatestEvent=max(StartTime) by State
+
+// sum()
+range x from 1 to 10 step 1
+| summarize sum(x)

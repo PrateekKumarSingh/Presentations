@@ -1,0 +1,64 @@
+// prints a single row with one or more scalar expression 
+print "hello world!"
+
+print ago(4d)
+
+// two types of query statement in Log Analytics
+// 1. tabular expression statement
+InsightsMetrics
+| take 10 
+
+// 2. let statement - defining variables
+let MyTable = InsightsMetrics | take 10;
+
+// tabular operators
+// -----------------------
+InsightsMetrics | count  // count rows
+
+InsightsMetrics | distinct Namespace, Name // unique combinations
+
+InsightsMetrics | take 10 // returns the specified number of records
+
+// find relevant data by filtering and condtions	
+// -----------------------
+Heartbeat 
+| where Computer contains "Windows"
+
+AppRequests 
+| where ResultCode == 200 // equality
+
+AppRequests
+| where ResultCode != 200  // inequality
+
+AppRequests 
+| where ResultCode == 20 and DurationMs > 70 // logical AND
+
+InsightsMetrics
+| where Namespace in ('Processor','Memory') // filters a record set for data 
+
+
+// select, remove and calculate columns
+// -----------------------
+
+InsightsMetrics 
+| where  Namespace contains "Processor" and Name == "UtilizationPercentage" 
+| project Computer, Name, Val // selected columns
+
+InsightsMetrics 
+| where  Namespace contains "Processor" and Name == "UtilizationPercentage" 
+| project-away Computer // removed column(s)
+
+// create calculated columns
+InsightsMetrics | where Namespace contains "Memory" and Name contains "AvailableMB" 
+| extend MemoryUtilPercentage = (100 - toint((Val/toint(parse_json(Tags)["vm.azm.ms/memorySizeMB"])*100)))
+| project Computer, Val, Tags, MemoryUtilPercentage
+
+
+// sorting
+// -----------------------
+
+// sorting the rows by one or more columns
+StormEvents
+| take 10 
+| sort by State asc, StartTime desc
+| project StartTime, State
