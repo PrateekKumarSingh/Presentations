@@ -4,7 +4,7 @@
 // more like a lambda function
 let IncrementBy2 = (arg0:long = 0) { arg0 + 2 };
 range x from 1 to 10 step 1
-| project x, x_plus_1 = IncrementBy2(x)
+| project x, x_plus_2 = IncrementBy2(x)
 
 // calculator
 let Calculator = (value1: int, value2: int, operand: string) {

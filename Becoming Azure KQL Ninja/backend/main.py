@@ -4,7 +4,6 @@ from azure.identity import ClientSecretCredential
 from azure.monitor.query import LogsQueryClient
 from datetime import timedelta
 from constants import tenant_id, client_id, client_secret
-import json
 import ast
 
 
@@ -34,7 +33,7 @@ InsightsMetrics
 
 app = FastAPI()
 
-# create a credential object
+# create a credential objects
 credential = ClientSecretCredential(
     tenant_id=tenant_id, client_id=client_id, client_secret=client_secret
 )
@@ -60,5 +59,5 @@ def query_log_analytics():
     #         metrics = ast.literal_eval(item[1])
     #         timestamps = ast.literal_eval(item[2])
     #         results[key] = {'metrics': metrics,
-    #                         'timestamps': timestamps}
-    # return json.dumps(results)
+    #                         'timestamps': [t.split('.')[0] for t in timestamps]}
+    # return results

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Typography, Box } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -35,8 +36,13 @@ export const options = {
       x: {
         type: "timeseries",
         time: {
-          // Luxon format string
-          // tooltipFormat: 'DD T'
+          parser: 'MM/DD/YYYY HH:mm',
+          tooltipFormat: 'll HH:mm',
+          unit: 'day',
+          unitStepSize: 1,
+          displayFormats: {
+            'day': 'MM/DD/YYYY'
+          }
         },
         title: {
           display: true,
@@ -63,7 +69,7 @@ const CpuMetrics = () => {
 
   useEffect(() => {
     const response = axios.get('/api/cpu-metrics').then((response) => {
-      setCpuMetrics(JSON.parse(response.data));
+      setCpuMetrics(response.data);
     });
     console.log(response);
 
@@ -101,10 +107,10 @@ const CpuMetrics = () => {
 
   return (
 
-    <div style={{ width: '50%', height: '800px', padding: "50px" }}>
-      <h2>CPU Metrics</h2>
+    <Box sx={{ display: 'flex', justifyItems: 'center', width: '50%', height: '800px' }}>
+      <Typography>CPU Metrics</Typography>
       <Line data={data} options={options} />
-    </div>
+    </Box>
   )
 };
 

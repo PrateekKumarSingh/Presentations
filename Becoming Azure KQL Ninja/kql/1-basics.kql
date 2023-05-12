@@ -1,9 +1,10 @@
 // prints a single row with one or more scalar expression 
 print "hello world!"
 
-print ago(4d)
+print ago(7d), now()
 
 // two types of query statement in Log Analytics
+// -----------------------
 // 1. tabular expression statement
 InsightsMetrics
 | take 10 
@@ -19,19 +20,20 @@ InsightsMetrics | distinct Namespace, Name // unique combinations
 
 InsightsMetrics | take 10 // returns the specified number of records
 
+
 // find relevant data by filtering and condtions	
 // -----------------------
 Heartbeat 
-| where Computer contains "Windows"
+| where Computer contains "vm"
 
 AppRequests 
-| where ResultCode == 200 // equality
+| where ResultCode == 404 // equality
 
 AppRequests
 | where ResultCode != 200  // inequality
 
 AppRequests 
-| where ResultCode == 20 and DurationMs > 70 // logical AND
+| where ResultCode == 304 and DurationMs > 10 // logical AND
 
 InsightsMetrics
 | where Namespace in ('Processor','Memory') // filters a record set for data 
@@ -46,7 +48,7 @@ InsightsMetrics
 
 InsightsMetrics 
 | where  Namespace contains "Processor" and Name == "UtilizationPercentage" 
-| project-away Computer // removed column(s)
+| project-away Computer // removed or drop column(s)
 
 // create calculated columns
 InsightsMetrics | where Namespace contains "Memory" and Name contains "AvailableMB" 

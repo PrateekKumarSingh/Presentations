@@ -4,7 +4,7 @@ InsightsMetrics
 | where Namespace == "Processor" and Name contains "UtilizationPercentage"
 | summarize Cpu = round(avg(Val),2) by bin(TimeGenerated,15m), Computer // summarize Aggregation by GroupExpression
 
-// count(), countif()
+// count(), countif() - frequency distribution
 StormEvents| take 1000 
 | where State startswith "W"
 | summarize Count=count() by State
