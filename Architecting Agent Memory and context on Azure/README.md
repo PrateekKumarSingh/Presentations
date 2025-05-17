@@ -1,3 +1,3 @@
-# Building RAG Applications with Azure OpenAI & Azure AI Search
+# Architecting Agent Memory and context on Azure
 
 👉 [Code samples and notebook](https://github.com/PrateekKumarSingh/AzureCosmosDB)
