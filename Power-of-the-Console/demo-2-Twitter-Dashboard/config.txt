@@ -1,4 +1,0 @@
-consumer_key=ConsumerKey
-consumer_secret=ConsumerSecret
-token=Token
-token_secret=TokenSecret
