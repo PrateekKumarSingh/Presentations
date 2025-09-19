@@ -1,0 +1,10 @@
+fastapi
+sqlmodel
+uvicorn
+fastapi-mcp
+requests
+notebook
+ipykernel
+flask
+pytest
+playwright
