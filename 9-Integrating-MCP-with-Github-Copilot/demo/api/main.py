@@ -12,7 +12,8 @@ class ToDo(SQLModel, table=True):
     completed: bool = False
 
 # --- DB Setup ---
-sqlite_file_name = "todo.db"
+import os
+sqlite_file_name = os.path.join(os.path.dirname(__file__), "todo.db")
 engine = create_engine(f"sqlite:///{sqlite_file_name}", echo=False)
 
 def create_db_and_tables():
@@ -70,17 +71,6 @@ def delete_todo(todo_id: int):
         return {"ok": True}
 
 
-# --- Remove manual MCP endpoints: fastapi-mcp will expose all endpoints as MCP tools automatically ---
-
-
-# --- MCP Integration using fastapi-mcp ---
 app = base_app
 mcp_app = FastApiMCP(app)
 mcp_app.mount_http(app, mount_path="/llm/mcp")
-
-# --- Test endpoint for MCP and API integration ---
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-# --- Run with: uvicorn main:app --reload --port 9000 ---

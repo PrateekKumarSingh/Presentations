@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start FastAPI server (kill port 9000)",
+      "type": "shell",
+      "command": "cd '/Users/prateek/presentations/9-Integrating MCP with Github Copilot/demo/api' && lsof -ti:9000 | xargs kill -9 && source venv/bin/activate && uvicorn main:app --reload --port 9000",
+      "args": [],
+      "isBackground": false,
+      "problemMatcher": [],
+      "group": "build",
+      "options": {
+        "statusbar": {
+          "label": "Run FASTAPI Server"
+        }
+      }
+    },
+    {
+      "label": "Start Flask web app",
+      "type": "shell",
+      "command": "cd '/Users/prateek/presentations/9-Integrating MCP with Github Copilot/demo/webapp' && source venv/bin/activate && python app.py",
+      "isBackground": false,
+      "problemMatcher": [],
+      "group": "build",
+      "options": {
+          "statusbar": {
+            "label": "Run Flask Web App"
+          }
+      }
+    }
+  ]
+}

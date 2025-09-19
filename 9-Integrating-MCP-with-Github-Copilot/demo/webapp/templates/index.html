@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo Webapp (Flask + FastAPI)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Todo List</h1>
+    <form method="post" action="/add" class="form-inline mb-3">
+        <input type="text" name="title" class="form-control mr-2" placeholder="New todo" required>
+        <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+    <ul class="list-group">
+        {% for todo in todos %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span {% if todo.completed %}style="text-decoration: line-through;"{% endif %}>{{ todo.title }}</span>
+            {% if not todo.completed %}
+            <form method="post" action="/complete/{{ todo.id }}" style="margin:0;">
+                <button type="submit" class="btn btn-success btn-sm">Mark Complete</button>
+            </form>
+            {% else %}
+            <span class="badge badge-success">Completed</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+</body>
+</html>

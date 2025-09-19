@@ -1,1 +1,15 @@
 *.txt
+/.venv/
+__pycache__/
+.ipynb_checkpoints/
+.env
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.playwright-mcp/
+.DS_Store
