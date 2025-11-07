@@ -1,0 +1,262 @@
+{
+    "genres": [
+        "Action",
+        "Adventure",
+        "Animation",
+        "Biography",
+        "Comedy",
+        "Crime",
+        "Drama",
+        "Fantasy",
+        "History",
+        "Mystery",
+        "Romance",
+        "Sci-Fi",
+        "Thriller",
+        "War"
+    ],
+    "movies": [
+        {
+            "title": "The Shawshank Redemption",
+            "year": "1994",
+            "genres": [
+                "Crime",
+                "Drama"
+            ],
+            "plot": "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency."
+        },
+        {
+            "title": "Pulp Fiction",
+            "year": "1994",
+            "genres": [
+                "Crime",
+                "Drama"
+            ],
+            "plot": "The lives of two mob hit men, a boxer, a gangster's wife, and a pair of diner bandits intertwine in four tales of violence and redemption."
+        },
+        {
+            "title": "Forrest Gump",
+            "year": "1994",
+            "genres": [
+                "Comedy",
+                "Drama"
+            ],
+            "plot": "Forrest Gump, while not intelligent, has accidentally been present at many historic moments, but his true love, Jenny Curran, eludes him."
+        },
+        {
+            "title": "The Lord of the Rings: The Return of the King",
+            "year": "2003",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Drama"
+            ],
+            "plot": "Gandalf and Aragorn lead the World of Men against Sauron's army to draw his gaze from Frodo and Sam as they approach Mount Doom with the One Ring."
+        },
+        {
+            "title": "The Lord of the Rings: The Fellowship of the Ring",
+            "year": "2001",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Drama"
+            ],
+            "plot": "A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle Earth from the Dark Lord Sauron."
+        },
+        {
+            "title": "The Lord of the Rings: The Two Towers",
+            "year": "2002",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Drama"
+            ],
+            "plot": "While Frodo and Sam edge closer to Mordor with the help of the shifty Gollum, the divided fellowship makes a stand against Sauron's new ally, Saruman, and his hordes of Isengard."
+        },
+        {
+            "title": "The Dark Knight",
+            "year": "2008",
+            "genres": [
+                "Action",
+                "Crime",
+                "Drama"
+            ],
+            "plot": "When the menace known as the Joker emerges from his mysterious past, he wreaks havoc and chaos on the people of Gotham."
+        },
+        {
+            "title": "Inception",
+            "year": "2010",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Sci-Fi"
+            ],
+            "plot": "A thief who steals corporate secrets through use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO."
+        },
+        {
+            "title": "The Godfather",
+            "year": "1972",
+            "genres": [
+                "Crime",
+                "Drama"
+            ],
+            "plot": "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son."
+        },
+        {
+            "title": "The Matrix",
+            "year": "1999",
+            "genres": [
+                "Action",
+                "Sci-Fi"
+            ],
+            "plot": "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers."
+        },
+        {
+            "title": "Gladiator",
+            "year": "2000",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Drama"
+            ],
+            "plot": "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery."
+        },
+        {
+            "title": "Titanic",
+            "year": "1997",
+            "genres": [
+                "Drama",
+                "Romance"
+            ],
+            "plot": "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic."
+        },
+        {
+            "title": "Interstellar",
+            "year": "2014",
+            "genres": [
+                "Adventure",
+                "Drama",
+                "Sci-Fi"
+            ],
+            "plot": "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival."
+        },
+        {
+            "title": "Fight Club",
+            "year": "1999",
+            "genres": [
+                "Drama"
+            ],
+            "plot": "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into something much, much more."
+        },
+        {
+            "title": "The Silence of the Lambs",
+            "year": "1991",
+            "genres": [
+                "Crime",
+                "Drama",
+                "Thriller"
+            ],
+            "plot": "A young F.B.I. cadet must receive the help of an incarcerated and manipulative cannibal killer to catch another serial killer."
+        },
+        {
+            "title": "Schindler's List",
+            "year": "1993",
+            "genres": [
+                "Biography",
+                "Drama",
+                "History"
+            ],
+            "plot": "In German-occupied Poland during World War II, industrialist Oskar Schindler gradually becomes concerned for his Jewish workforce."
+        },
+        {
+            "title": "Jurassic Park",
+            "year": "1993",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Sci-Fi"
+            ],
+            "plot": "During a preview tour, a theme park suffers a major power breakdown that allows its cloned dinosaur exhibits to run amok."
+        },
+        {
+            "title": "The Avengers",
+            "year": "2012",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Sci-Fi"
+            ],
+            "plot": "Earth's mightiest heroes must come together and learn to fight as a team to stop the mischievous Loki and his alien army."
+        },
+        {
+            "title": "Avatar",
+            "year": "2009",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Fantasy"
+            ],
+            "plot": "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following orders and protecting an alien civilization."
+        },
+        {
+            "title": "Star Wars: Episode IV - A New Hope",
+            "year": "1977",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Fantasy"
+            ],
+            "plot": "Luke Skywalker joins forces with a Jedi Knight, a cocky pilot, a Wookiee and two droids to save the galaxy from the Empire's world-destroying battle station."
+        },
+        {
+            "title": "Star Wars: Episode V - The Empire Strikes Back",
+            "year": "1980",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Fantasy"
+            ],
+            "plot": "After the Rebels are brutally overpowered by the Empire on the ice planet Hoth, Luke begins Jedi training with Yoda while his friends are pursued."
+        },
+        {
+            "title": "Harry Potter and the Sorcerer's Stone",
+            "year": "2001",
+            "genres": [
+                "Adventure",
+                "Family",
+                "Fantasy"
+            ],
+            "plot": "An orphaned boy enrolls in a school of wizardry, where he learns the truth about himself, his family and the terrible evil that haunts the magical world."
+        },
+        {
+            "title": "Harry Potter and the Deathly Hallows: Part 2",
+            "year": "2011",
+            "genres": [
+                "Adventure",
+                "Drama",
+                "Fantasy"
+            ],
+            "plot": "Harry, Ron and Hermione search for Voldemort's remaining Horcruxes in their effort to destroy the Dark Lord."
+        },
+        {
+            "title": "Iron Man",
+            "year": "2008",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Sci-Fi"
+            ],
+            "plot": "After being held captive in an Afghan cave, billionaire engineer Tony Stark creates a unique weaponized suit of armor to fight evil."
+        },
+        {
+            "title": "Captain America: The Winter Soldier",
+            "year": "2014",
+            "genres": [
+                "Action",
+                "Adventure",
+                "Sci-Fi"
+            ],
+            "plot": "As Steve Rogers struggles to embrace his role in the modern world, he teams up with a fellow Avenger and S.H.I.E.L.D agent to battle a new threat."
+        }
+    ]
+}
