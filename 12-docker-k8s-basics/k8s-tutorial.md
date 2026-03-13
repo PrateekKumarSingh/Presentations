@@ -89,11 +89,14 @@ kubectl scale deployment hello-deploy --replicas=3
 kubectl get pods -l app=hello
 ```
 
-## 4) Service (14-17 min)
+## 4) Service
 
 ### Definition
 
 A Service is a stable endpoint in front of a changing set of Pods.
+
+- Pods are ephemeral. Their IPs change when they restart.
+- A Service gives a permanent network identity.
 
 ### Manifest File
 
@@ -107,28 +110,109 @@ kubectl get svc hello-svc
 minikube service hello-svc
 ```
 
-## 5) Ingress (17-20 min)
+Your doc is **almost correct**, but for **minikube + ingress-nginx addon** there are two important updates:
+
+1️⃣ You must **enable the ingress controller**
+2️⃣ When using **`minikube tunnel`**, `hello.local` should map to **127.0.0.1**, not the minikube IP.
+
+Right now your doc assumes the old **NodePort-style access**.
+
+
+## 5) Ingress
 
 ### Definition
 
-Ingress routes HTTP/HTTPS traffic by host/path to Services.
+Ingress routes **HTTP/HTTPS traffic by hostname or path to Kubernetes Services** using an **Ingress Controller (NGINX)**.
 
-### Manifest File
 
-- `lab/manifests/04-ingress.yaml`
+## Enable Ingress Controller
 
-### Commands
+Minikube requires enabling the ingress addon.
+
+```bash
+minikube addons enable ingress
+kubectl get pods -n ingress-nginx
+```
+
+Wait until the controller pod is **Running**.
+
+Example:
+
+```text
+ingress-nginx-controller-xxxxx   1/1   Running
+```
+
+
+## Apply Ingress
 
 ```bash
 kubectl apply -f lab/manifests/04-ingress.yaml
 kubectl get ingress hello-ing
-
-MINIKUBE_IP=$(minikube ip)
-echo "$MINIKUBE_IP hello.local" | sudo tee -a /etc/hosts
-curl -H "Host: hello.local" "http://$MINIKUBE_IP/"
 ```
 
-## 6) ConfigMap (20-21 min)
+---
+
+## Start the Ingress tunnel
+
+Minikube exposes ingress through a tunnel.
+
+Run this in a **separate terminal**:
+
+```bash
+minikube tunnel
+```
+
+---
+
+## Configure local DNS
+
+Map the hostname used by the Ingress rule.
+
+```bash
+echo "127.0.0.1 hello.local" | sudo tee -a /etc/hosts
+```
+
+Verify:
+
+```bash
+ping hello.local
+```
+
+---
+
+## Test the Ingress
+
+```bash
+curl http://hello.local
+```
+
+or open in browser:
+
+```
+http://hello.local
+```
+
+
+# Optional (very helpful for learners)
+
+
+```
+Browser
+   │
+hello.local
+   │
+127.0.0.1
+   │
+minikube tunnel
+   │
+Ingress Controller (NGINX)
+   │
+Service hello-svc
+   │
+Pods (hello-deploy)
+```
+
+## 6) ConfigMap
 
 ### Definition
 
@@ -148,7 +232,7 @@ kubectl logs cm-demo
 kubectl delete pod cm-demo
 ```
 
-## 7) Secret (21-23 min)
+## 7) Secret
 
 ### Definition
 
@@ -187,7 +271,7 @@ kubectl describe pod resources-demo | sed -n '/Requests:/,/QoS Class:/p'
 kubectl delete pod resources-demo
 ```
 
-## 9) Probes (24-26 min)
+## 9) Probes
 
 ### Definitions
 
@@ -206,7 +290,7 @@ kubectl get pods -l app=probes
 kubectl delete deployment probes-demo
 ```
 
-## 10) Namespace (26-27 min)
+## 10) Namespace
 
 ### Definition
 
@@ -225,7 +309,7 @@ kubectl -n demo get all
 kubectl delete namespace demo
 ```
 
-## 11) PVC / Storage (27-28 min)
+## 11) PVC / Storage
 
 ### Definition
 

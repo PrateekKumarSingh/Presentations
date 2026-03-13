@@ -9,3 +9,4 @@ minikube addons enable ingress
 minikube addons enable metrics-server
 
 kubectl get nodes
+
