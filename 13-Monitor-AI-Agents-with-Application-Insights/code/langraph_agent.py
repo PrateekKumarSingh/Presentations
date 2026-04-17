@@ -12,6 +12,8 @@ import logging
 import json
 from pathlib import Path
 from typing import TypedDict
+from contextlib import nullcontext
+from opentelemetry.trace import Status, StatusCode
 
 from langgraph.graph import StateGraph
 from openai import OpenAI, AzureOpenAI
@@ -55,6 +57,8 @@ class AgentState(TypedDict, total=False):
     cost_usd: float
     tool_failure: bool
     tool_failure_reason: str
+    overall_status: str
+    step_statuses: dict
 
 
 class SimpleLangGraphAgent:
@@ -148,114 +152,159 @@ class SimpleLangGraphAgent:
         return builder.compile()
 
     def parse_request(self, state: AgentState) -> AgentState:
-        request = state["user_request"]
-        system_prompt = (
-            "Extract destination city from the user's travel request. "
-            "Return strict JSON with key 'destination'."
+        node_ctx = (
+            self.tracer.start_as_current_span("parse_request") if self.tracer else nullcontext()
         )
-        user_prompt = f"User request: {request}"
+        with node_ctx as node_span:
+            request = state["user_request"]
+            system_prompt = (
+                "Extract destination city from the user's travel request. "
+                "Return strict JSON with key 'destination'."
+            )
+            user_prompt = f"User request: {request}"
 
-        content, input_tokens, output_tokens, step_cost = self._invoke_llm(
-            operation_name="parse_request",
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-        )
+            content, input_tokens, output_tokens, step_cost = self._invoke_llm(
+                operation_name="parse_request",
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+            )
 
-        destination = "Tokyo"
-        try:
-            parsed = json.loads(content)
-            destination = str(parsed.get("destination", "Tokyo")).strip() or "Tokyo"
-        except Exception:
-            if "tokyo" in request.lower():
-                destination = "Tokyo"
-            elif "paris" in request.lower():
-                destination = "Paris"
+            destination = "Tokyo"
+            try:
+                parsed = json.loads(content)
+                destination = str(parsed.get("destination", "Tokyo")).strip() or "Tokyo"
+            except Exception:
+                if "tokyo" in request.lower():
+                    destination = "Tokyo"
+                elif "paris" in request.lower():
+                    destination = "Paris"
 
-        return {
-            **state,
-            "destination": destination,
-            "input_tokens": state.get("input_tokens", 0) + input_tokens,
-            "output_tokens": state.get("output_tokens", 0) + output_tokens,
-            "cost_usd": state.get("cost_usd", 0.0) + step_cost,
-        }
+            step_statuses = {**state.get("step_statuses", {})}
+            step_statuses["parse_request"] = "success"
+
+            if node_span:
+                node_span.set_attribute("step.name", "parse_request")
+                node_span.set_attribute("step.status", "success")
+                node_span.set_status(Status(StatusCode.OK))
+
+            return {
+                **state,
+                "destination": destination,
+                "input_tokens": state.get("input_tokens", 0) + input_tokens,
+                "output_tokens": state.get("output_tokens", 0) + output_tokens,
+                "cost_usd": state.get("cost_usd", 0.0) + step_cost,
+                "step_statuses": step_statuses,
+            }
 
     def call_tools(self, state: AgentState) -> AgentState:
-        destination = state["destination"]
-        tool_failure = False
-        tool_failure_reason = ""
-
-        if self.tracer:
-            with tool_span(self.tracer, "get_weather") as span:
-                weather = get_weather(destination, "Dec 1-5")
-                span.set_attribute("http.status_code", 200)
-                span.set_attribute("db.response.count", 1)
-        else:
-            weather = get_weather(destination, "Dec 1-5")
-
-        try:
-            # Keep existing demo keyword for failure simulation compatibility
-            if "fail_hotel" in state["user_request"].lower():
-                raise TimeoutError("Simulated web search timeout")
+        node_ctx = (
+            self.tracer.start_as_current_span("fetch_external_data") if self.tracer else nullcontext()
+        )
+        with node_ctx as node_span:
+            destination = state["destination"]
+            tool_failure = False
+            tool_failure_reason = ""
+            step_statuses = {**state.get("step_statuses", {})}
 
             if self.tracer:
-                with tool_span(self.tracer, "web_search") as span:
-                    results = web_search(f"best places to stay in {destination}", limit=5)
+                with tool_span(self.tracer, "get_weather") as span:
+                    weather = get_weather(destination, "Dec 1-5")
                     span.set_attribute("http.status_code", 200)
-                    span.set_attribute("db.response.count", len(results))
-                    span.set_attribute("tool_params.limit", 5)
+                    span.set_attribute("db.response.count", 1)
             else:
-                results = web_search(f"best places to stay in {destination}", limit=5)
+                weather = get_weather(destination, "Dec 1-5")
 
-        except Exception as err:
-            tool_failure = True
-            tool_failure_reason = str(err)
-            if self.tracer:
-                with tool_span(self.tracer, "web_search") as span:
-                    record_failure(
-                        span=span,
-                        error=err,
-                        operation_name="web_search",
-                        status_code=504,
-                        retry_count=1,
-                    )
-            results = []
+            try:
+                # Keep existing demo keyword for failure simulation compatibility
+                if "failure_simulation" in state["user_request"].lower():
+                    raise TimeoutError("Simulated web search timeout")
 
-        return {
-            **state,
-            "weather": weather,
-            "search_results": results,
-            "tool_failure": tool_failure,
-            "tool_failure_reason": tool_failure_reason,
-        }
+                if self.tracer:
+                    with tool_span(self.tracer, "web_search") as span:
+                        results = web_search(f"best places to stay in {destination}", limit=5)
+                        span.set_attribute("http.status_code", 200)
+                        span.set_attribute("db.response.count", len(results))
+                        span.set_attribute("tool_params.limit", 5)
+                else:
+                    results = web_search(f"best places to stay in {destination}", limit=5)
+
+            except Exception as err:
+                tool_failure = True
+                tool_failure_reason = str(err)
+                if self.tracer:
+                    with tool_span(self.tracer, "web_search") as span:
+                        record_failure(
+                            span=span,
+                            error=err,
+                            operation_name="web_search",
+                            status_code=504,
+                            retry_count=1,
+                        )
+                results = []
+
+            step_statuses["fetch_external_data"] = "failed" if tool_failure else "success"
+
+            if node_span:
+                node_span.set_attribute("step.name", "fetch_external_data")
+                node_span.set_attribute("step.status", step_statuses["fetch_external_data"])
+                if tool_failure:
+                    node_span.set_status(Status(StatusCode.ERROR, tool_failure_reason or "tool_failure"))
+                    node_span.set_attribute("error.message", tool_failure_reason or "tool_failure")
+                else:
+                    node_span.set_status(Status(StatusCode.OK))
+
+            return {
+                **state,
+                "weather": weather,
+                "search_results": results,
+                "tool_failure": tool_failure,
+                "tool_failure_reason": tool_failure_reason,
+                "step_statuses": step_statuses,
+            }
 
     def finalize_response(self, state: AgentState) -> AgentState:
-        weather = state["weather"]
-        top_results = state.get("search_results", [])[:3]
-
-        system_prompt = (
-            "You are a travel planner. Create a concise 3-day itinerary from the provided facts. "
-            "Use plain text with clear day-wise bullets."
+        node_ctx = (
+            self.tracer.start_as_current_span("compose_itinerary") if self.tracer else nullcontext()
         )
-        user_prompt = (
-            f"Destination: {state['destination']}\n"
-            f"Weather: {json.dumps(weather)}\n"
-            f"Web search results: {json.dumps(top_results)}\n"
-            "Generate the final itinerary."
-        )
+        with node_ctx as node_span:
+            weather = state["weather"]
+            top_results = state.get("search_results", [])[:3]
 
-        itinerary, input_tokens, output_tokens, step_cost = self._invoke_llm(
-            operation_name="finalize_response",
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-        )
+            system_prompt = (
+                "You are a travel planner. Create a concise 3-day itinerary from the provided facts. "
+                "Use plain text with clear day-wise bullets."
+            )
+            user_prompt = (
+                f"Destination: {state['destination']}\n"
+                f"Weather: {json.dumps(weather)}\n"
+                f"Web search results: {json.dumps(top_results)}\n"
+                "Generate the final itinerary."
+            )
 
-        return {
-            **state,
-            "itinerary": itinerary,
-            "input_tokens": state.get("input_tokens", 0) + input_tokens,
-            "output_tokens": state.get("output_tokens", 0) + output_tokens,
-            "cost_usd": state.get("cost_usd", 0.0) + step_cost,
-        }
+            itinerary, input_tokens, output_tokens, step_cost = self._invoke_llm(
+                operation_name="finalize_response",
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+            )
+
+            step_statuses = {**state.get("step_statuses", {})}
+            step_statuses["compose_itinerary"] = "success"
+            overall_status = "failed" if state.get("tool_failure", False) else "success"
+
+            if node_span:
+                node_span.set_attribute("step.name", "compose_itinerary")
+                node_span.set_attribute("step.status", "success")
+                node_span.set_status(Status(StatusCode.OK))
+
+            return {
+                **state,
+                "itinerary": itinerary,
+                "input_tokens": state.get("input_tokens", 0) + input_tokens,
+                "output_tokens": state.get("output_tokens", 0) + output_tokens,
+                "cost_usd": state.get("cost_usd", 0.0) + step_cost,
+                "step_statuses": step_statuses,
+                "overall_status": overall_status,
+            }
 
     def run(self, user_request: str) -> AgentState:
         initial_state: AgentState = {
@@ -263,6 +312,8 @@ class SimpleLangGraphAgent:
             "input_tokens": 0,
             "output_tokens": 0,
             "cost_usd": 0.0,
+            "overall_status": "in_progress",
+            "step_statuses": {},
         }
 
         if not self.tracer:
@@ -271,10 +322,21 @@ class SimpleLangGraphAgent:
         with agent_span(self.tracer, "simple_travel_agent", {"user.request": user_request}) as root_span:
             try:
                 result = self.graph.invoke(initial_state)
-                root_span.set_attribute("status", "success")
+                overall_status = result.get("overall_status", "success")
+                root_span.set_attribute("status", overall_status)
                 root_span.set_attribute("gen_ai.usage.input_tokens", result["input_tokens"])
                 root_span.set_attribute("gen_ai.usage.output_tokens", result["output_tokens"])
                 root_span.set_attribute("gen_ai.usage.estimated_cost_usd", result["cost_usd"])
+                for step_name, step_status in result.get("step_statuses", {}).items():
+                    root_span.set_attribute(f"step.{step_name}.status", step_status)
+
+                if overall_status == "failed":
+                    root_span.set_status(
+                        Status(StatusCode.ERROR, result.get("tool_failure_reason", "step_failure"))
+                    )
+                else:
+                    root_span.set_status(Status(StatusCode.OK))
+
                 return result
             except Exception as err:
                 record_failure(root_span, err, "simple_travel_agent")
@@ -314,7 +376,7 @@ def main():
 
     print("\nSimple LangGraph Agent (Interactive)")
     print("Type your travel request and press Enter.")
-    print("Type 'exit' to quit. Include 'fail_hotel' in prompt to simulate tool failure.\n")
+    print("Type 'exit' to quit. Include 'failure_simulation' in prompt to simulate tool failure.\n")
 
     try:
         while True:

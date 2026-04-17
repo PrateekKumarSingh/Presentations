@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 from contextlib import contextmanager
 
 from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
@@ -203,6 +204,8 @@ def record_failure(
     retry_count: Optional[int] = None,
 ):
     """Record standardized failure attributes for easier filtering in Agents View."""
+    span.record_exception(error)
+    span.set_status(Status(StatusCode.ERROR, str(error)))
     span.set_attribute("status", "error")
     span.set_attribute("error.type", type(error).__name__)
     span.set_attribute("error.message", str(error))
